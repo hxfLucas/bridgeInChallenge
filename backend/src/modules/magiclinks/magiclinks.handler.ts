@@ -1,23 +1,26 @@
 import { Request, Response } from 'express'
-import { MagicLinksService } from './magiclinks.service'
+import { getAuthenticatedUserData } from '../../shared/auth/authContext'
+import { listByCompany, createMagicLink, deleteById } from './magiclinks.service'
 
-const service = new MagicLinksService()
 
 export async function listMagicLinks(req: Request, res: Response): Promise<void> {
-  const companyId = req.user!.companyId
-  const links = await service.list(companyId)
-  res.status(200).json(links)
-}
-
-export async function createNewMagicLink(req: Request, res: Response): Promise<void> {
-  const companyId = req.user?.companyId
+  const companyId = getAuthenticatedUserData().companyId;
   if (!companyId) {
     res.status(400).json({ error: 'companyId is required' })
     return
   }
+  const items = await listByCompany(companyId)
+  res.status(200).json(items)
+}
 
-  const link = await service.create(companyId)
-  res.status(201).json(link)
+export async function createNewMagicLink(req: Request, res: Response): Promise<void> {
+  const companyId = getAuthenticatedUserData().companyId;
+  if (!companyId) {
+    res.status(400).json({ error: 'companyId is required' })
+    return
+  }
+  const created = await createMagicLink(companyId)
+  res.status(201).json({ id: created.id, reportingToken: created.reportingToken, createdAt: created.createdAt })
 }
 
 export async function deleteMagicLink(req: Request, res: Response): Promise<void> {
@@ -26,7 +29,12 @@ export async function deleteMagicLink(req: Request, res: Response): Promise<void
     res.status(400).json({ error: 'id is required' })
     return
   }
+  const companyId = getAuthenticatedUserData().companyId
+  if (!companyId) {
+    res.status(400).json({ error: 'companyId is required' })
+    return
+  }
 
-  await service.delete(id)
+  await deleteById(id, companyId)
   res.status(204).send()
 }

@@ -9,7 +9,7 @@ export type User = {
   role: UserRole;
   createdAt: string;
 };
-export type AddUserPayload = { email: string; name: string };
+export type AddUserPayload = { email: string; name: string; password: string };
 
 type ListUsersResponse = {
   items: User[];
@@ -27,4 +27,8 @@ export async function addUser(payload: AddUserPayload): Promise<User> {
 
 export async function removeUser(id: string): Promise<void> {
   await api.delete(`/users/remove-user/${id}`);
+}
+
+export async function updateUserPassword(id: string, password: string): Promise<void> {
+  await api.patch('/users/update-user', { id, password });
 }

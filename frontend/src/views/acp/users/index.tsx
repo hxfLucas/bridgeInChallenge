@@ -20,14 +20,18 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import { useUsers } from '../../../hooks/modules/useUsers';
 
 export default function UsersPage() {
-  const { users, isLoading, error, fetchUsers, addUser, removeUser } = useUsers();
+  const { users, isLoading, error, fetchUsers, addUser, removeUser, updateUserPassword } = useUsers();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editUserId, setEditUserId] = useState<string>('');
+  const [editPassword, setEditPassword] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -36,6 +40,7 @@ export default function UsersPage() {
   const handleOpenDialog = () => {
     setName('');
     setEmail('');
+    setPassword('');
     setDialogOpen(true);
   };
 
@@ -45,8 +50,24 @@ export default function UsersPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    addUser({ name, email });
+    addUser({ name, email, password });
     setDialogOpen(false);
+  };
+
+  const handleOpenEditDialog = (userId: string) => {
+    setEditUserId(userId);
+    setEditPassword('');
+    setEditDialogOpen(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    setEditDialogOpen(false);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateUserPassword(editUserId, editPassword);
+    setEditDialogOpen(false);
   };
 
   return (
@@ -110,6 +131,14 @@ export default function UsersPage() {
                   <TableCell align="right">
                     <IconButton
                       size="small"
+                      color="default"
+                      onClick={() => handleOpenEditDialog(user.id)}
+                      aria-label="edit user password"
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
                       color={user.role === 'admin' ? 'default' : 'error'}
                       onClick={user.role === 'admin' ? undefined : () => removeUser(user.id)}
                       aria-label="delete user"
@@ -130,7 +159,6 @@ export default function UsersPage() {
         <DialogTitle>Add New User</DialogTitle>
         <Box component="form" onSubmit={handleSubmit}>
           <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-
             <TextField
               label="Email"
               type="email"
@@ -139,11 +167,46 @@ export default function UsersPage() {
               required
               fullWidth
             />
+            <TextField
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              fullWidth
+              inputProps={{ minLength: 6 }}
+              helperText="Minimum 6 characters"
+            />
           </DialogContent>
           <DialogActions sx={{ px: 3, pb: 2 }}>
             <Button onClick={handleCloseDialog}>Cancel</Button>
             <Button type="submit" variant="contained">
               Submit
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
+
+      {/* Edit User Password Dialog */}
+      <Dialog open={editDialogOpen} onClose={handleCloseEditDialog} maxWidth="xs" fullWidth>
+        <DialogTitle>Change Password</DialogTitle>
+        <Box component="form" onSubmit={handleEditSubmit}>
+          <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <TextField
+              label="New Password"
+              type="password"
+              value={editPassword}
+              onChange={(e) => setEditPassword(e.target.value)}
+              required
+              fullWidth
+              inputProps={{ minLength: 6 }}
+              helperText="Minimum 6 characters"
+            />
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button onClick={handleCloseEditDialog}>Cancel</Button>
+            <Button type="submit" variant="contained">
+              Save
             </Button>
           </DialogActions>
         </Box>

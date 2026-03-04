@@ -3,18 +3,31 @@ import { getAppDataSource } from '../../shared/database/data-source';
 import { isValidEmail } from '../../shared/utils/validateEmail';
 import { AddUserDto } from './users.dtos';
 import { User } from './users.entity';
-import { createUserForCompany, deleteUserFromCompany } from './users.service';
+import { createUserForCompany, deleteUserFromCompany, updateUserPassword as updateUserPasswordService } from './users.service';
 
 export async function addUser(req: Request<{}, {}, AddUserDto>, res: Response) {
 
-  const { email: rawEmail } = req.body ?? {};
+  const { email: rawEmail, password: rawPassword } = req.body ?? {};
   const email = String(rawEmail ?? '').trim().toLowerCase();
+  const password = String(rawPassword ?? '').trim();
 
   if (!isValidEmail(email)) return res.status(400).json({ error: 'Invalid or missing email' });
+  if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
 
-  const created = await createUserForCompany({ email });
-  const { password, ...safe } = (created as any);
+  const created = await createUserForCompany({ email, password });
+  const { passwordHash, ...safe } = (created as any);
   return res.status(201).json(safe);
+}
+
+export async function updateUserPassword(req: Request, res: Response) {
+  const { id, password: rawPassword } = req.body ?? {};
+  const password = String(rawPassword ?? '').trim();
+
+  if (!id || typeof id !== 'string') return res.status(400).json({ error: 'Missing or invalid user id' });
+  if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+
+  await updateUserPasswordService({ id, password });
+  return res.sendStatus(204);
 }
 
 export async function removeUser(req: Request<{ id: string }>, res: Response) {

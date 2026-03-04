@@ -49,3 +49,14 @@ These coding principles are mandatory:
 9. Quality
 - Favor deterministic, testable behavior.
 - Keep tests simple and focused on verifying observable behavior.
+
+
+## specific implementations
+
+When implementing endpoints relative to CRUD:
+
+CREATE/UPDATE: the response body must include the full new object as stored in the database, including any generated fields like id or timestamps. Except if it has sensitive information like passwords, in which case those fields should be omitted from the response.
+
+DELETE: just responding with the status code is sufficient, no response body is necessary.
+
+Listing: the response should be an array of objects, even if there is only one object in the list. This keeps the API consistent and easier to work with on the client side.

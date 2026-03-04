@@ -1,25 +1,47 @@
-import crypto from 'crypto'
 import { getAppDataSource } from '../../shared/database/data-source'
 import { MagicLink } from './magiclinks.entity'
-import { Company } from '../companies/companies.entity'
+import { generateMagicLinkData } from './magiclinks.utils'
 
-export class MagicLinksService {
-  private get repo() { return getAppDataSource().getRepository(MagicLink) }
-
-  async list(companyId: string): Promise<MagicLink[]> {
-    return await this.repo.find({ where: { company: { id: companyId } } })
-  }
-
-  async create(companyId: string): Promise<MagicLink> {
-    const reportingToken = crypto.randomBytes(24).toString('hex')
-    const link = this.repo.create({
-      reportingToken,
-      company: ({ id: companyId } as unknown) as Company,
-    })
-    return await this.repo.save(link)
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.repo.delete(id)
-  }
+export async function listByCompany(companyId: string): Promise<MagicLink[]> {
+  const repo = getAppDataSource().getRepository(MagicLink)
+  const items = await repo.find({
+    where: { company: { id: companyId } as any },
+    order: { createdAt: 'DESC' },
+  })
+  return items
 }
+
+export async function createMagicLink(companyId: string): Promise<MagicLink> {
+  const repo = getAppDataSource().getRepository(MagicLink)
+  const magicLinkData = await generateMagicLinkData()
+
+  const entity = repo.create({
+    reportingToken: magicLinkData.reportingToken,
+    company: { id: companyId } as any,
+  } as Partial<MagicLink>)
+
+  const saved = await repo.save(entity)
+  return saved
+}
+
+export async function deleteById(id: string, companyId?: string): Promise<void> {
+  const repo = getAppDataSource().getRepository(MagicLink)
+
+  let link: MagicLink | null = null
+  if (companyId) {
+    link = await repo.findOne({ where: { id, company: { id: companyId } as any } })
+  } else {
+    link = await repo.findOneBy({ id } as any)
+  }
+
+  if (!link) {
+    const err: any = new Error('Magic link not found')
+    err.code = 'NOT_FOUND'
+    err.status = 404
+    throw err
+  }
+
+  await repo.remove(link)
+}
+
+export default { listByCompany, createMagicLink, deleteById }

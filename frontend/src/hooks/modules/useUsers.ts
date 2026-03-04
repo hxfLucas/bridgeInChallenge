@@ -3,6 +3,7 @@ import {
   addUser as apiAddUser,
   listUsers as apiListUsers,
   removeUser as apiRemoveUser,
+  updateUserPassword as apiUpdateUserPassword,
 } from '../../api/users.api';
 import type { User, AddUserPayload } from '../../api/users.api';
 
@@ -56,5 +57,17 @@ export function useUsers() {
     }
   }, []);
 
-  return { ...state, fetchUsers, addUser, removeUser };
+  const updateUserPassword = useCallback(async (id: string, password: string) => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+    try {
+      await apiUpdateUserPassword(id, password);
+      setState((prev) => ({ ...prev, isLoading: false }));
+    } catch (err: any) {
+      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to update password';
+      setState((prev) => ({ ...prev, isLoading: false, error: message }));
+      throw err;
+    }
+  }, []);
+
+  return { ...state, fetchUsers, addUser, removeUser, updateUserPassword };
 }
