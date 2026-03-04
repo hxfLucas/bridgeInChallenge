@@ -15,9 +15,6 @@ export class User {
   @JoinColumn({ name: 'company_id' })
   company!: Company;
 
-  @Column({ type: 'varchar', nullable: false })
-  name!: string;
-
   @Column({ type: 'varchar', unique: true, nullable: false })
   email!: string;
 
