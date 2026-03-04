@@ -81,7 +81,7 @@ function generateTokenPair(userId: string, email: string): { access_token: strin
   const refreshSecret = getRefreshSecret();
 
   const access_token = jwt.sign(
-    { sub: userId, email },
+    { sub: userId },
     accessSecret,
     { algorithm: 'HS256', expiresIn: '15m' }
   );
@@ -89,7 +89,7 @@ function generateTokenPair(userId: string, email: string): { access_token: strin
   const atHash = md5Hash(access_token);
 
   const refresh_token = jwt.sign(
-    { sub: userId, email, atHash },
+    { sub: userId, atHash },
     refreshSecret,
     { algorithm: 'HS256', expiresIn: '7d' }
   );
@@ -122,7 +122,7 @@ export async function signUp(req: Request, res: Response, next: NextFunction): P
     }
 
     const passwordHash = await hashPassword(password);
-    const user = repository.create({ email, passwordHash });
+    const user = repository.create({ email, passwordHash, role: 'admin' });
     await repository.save(user);
 
     const { access_token, refresh_token } = generateTokenPair(user.id, user.email);

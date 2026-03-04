@@ -4,6 +4,7 @@ import createCorsMiddleware from './shared/middleware/cors';
 import { getAppDataSource, setAppDataSource } from './shared/database/data-source';
 import errorHandler from './shared/middleware/errorHandler';
 import authRouter from './modules/auth/auth.routes';
+import usersRouter from './modules/users/users.routes';
 
 import { requestContextMiddleware } from './shared/auth/requestContext';
 
@@ -24,6 +25,7 @@ export async function createApp(dataSource?: any){
         await ds.initialize().catch((err:any) => console.error('DataSource init error', err));
 
         app.use('/auth', authRouter);
+        app.use('/users', usersRouter);
 
         app.use(errorHandler);
         return app;
