@@ -5,6 +5,7 @@ import SignUpPage from '../views/auth/sign-up';
 import AcpLayout from '../views/acp';
 import UsersPage from '../views/acp/users';
 import ReportsPage from '../views/acp/reports';
+import MagicLinksPage from '../views/acp/magiclinks';
 
 const router = createBrowserRouter([
   {
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
           {
             path: 'users',
             element: <UsersPage />,
+          },
+          {
+            path: 'magiclinks',
+            element: <MagicLinksPage />,
           },
         ],
       },

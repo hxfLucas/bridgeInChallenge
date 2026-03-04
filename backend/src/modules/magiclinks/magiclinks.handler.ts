@@ -3,8 +3,14 @@ import { MagicLinksService } from './magiclinks.service'
 
 const service = new MagicLinksService()
 
+export async function listMagicLinks(req: Request, res: Response): Promise<void> {
+  const companyId = req.user!.companyId
+  const links = await service.list(companyId)
+  res.status(200).json(links)
+}
+
 export async function createNewMagicLink(req: Request, res: Response): Promise<void> {
-  const { companyId } = req.body as { companyId?: string }
+  const companyId = req.user?.companyId
   if (!companyId) {
     res.status(400).json({ error: 'companyId is required' })
     return

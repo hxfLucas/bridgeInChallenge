@@ -113,7 +113,8 @@ function setAccessTokenCookie(res: Response, accessToken: string): void {
 }
 
 export async function signUp(req: Request, res: Response): Promise<void> {
-  const { email, password, company } = req.body ?? {};
+  const { email: rawEmail, password, company } = req.body ?? {};
+  const email = String(rawEmail ?? '').trim().toLowerCase();
   if (!email || !password) {
     throw createHttpError(400, 'email and password are required');
   }
@@ -140,7 +141,8 @@ export async function signUp(req: Request, res: Response): Promise<void> {
 }
 
 export async function signIn(req: Request, res: Response): Promise<void> {
-  const { email, password } = req.body ?? {};
+  const { email: rawEmail, password } = req.body ?? {};
+  const email = String(rawEmail ?? '').trim().toLowerCase();
   if (!email || !password) {
     throw createHttpError(400, 'email and password are required');
   }

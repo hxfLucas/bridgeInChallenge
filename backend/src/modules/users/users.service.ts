@@ -48,8 +48,9 @@ export async function createUserForCompany(
   return saved;
 }
 
-export async function deleteUserFromCompany(admin: AdminContext, id: string): Promise<void> {
-  if (admin.role !== 'admin') {
+export async function deleteUserFromCompany(id: string): Promise<void> {
+  const authData = getAuthenticatedUserData();
+  if (authData.role !== 'admin') {
     const err: any = new Error('Forbidden');
     err.code = 'FORBIDDEN';
     err.status = 403;
@@ -65,7 +66,7 @@ export async function deleteUserFromCompany(admin: AdminContext, id: string): Pr
     throw err;
   }
 
-  if (user.companyId !== admin.companyId) {
+  if (user.companyId !== authData.companyId) {
     const err: any = new Error('Cannot operate on users from other companies');
     err.code = 'FORBIDDEN';
     err.status = 403;

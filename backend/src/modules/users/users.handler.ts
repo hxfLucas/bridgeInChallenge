@@ -4,10 +4,12 @@ import { User } from './users.entity';
 import { createUserForCompany, deleteUserFromCompany } from './users.service';
 import { getAuthenticatedUserData } from '../../shared/auth/authContext';
 import { isValidEmail } from '../../shared/utils/validateEmail';
+import { AddUserDto, RemoveUserDto } from './users.dtos';
 
-export async function addUser(req: Request<{}, {}, { email: string }>, res: Response) {
+export async function addUser(req: Request, res: Response) {
 
-  const { email } = req.body ?? {};
+  const { email: rawEmail } = (req.body as AddUserDto) ?? {};
+  const email = String(rawEmail ?? '').trim().toLowerCase();
 
   if (!isValidEmail(email)) return res.status(400).json({ error: 'Invalid or missing email' });
 
@@ -16,13 +18,12 @@ export async function addUser(req: Request<{}, {}, { email: string }>, res: Resp
   return res.status(201).json(safe);
 }
 
-export async function removeUser(req: Request<{ id: string }>, res: Response) {
-  const u = req.user!;
-  const admin = { id: u.sub, role: u.role, companyId: (u as any).companyId };
-  const id: string = req.params?.id;
+export async function removeUser(req: Request, res: Response) {
+  const params = req.params as Partial<RemoveUserDto> & { id?: string };
+  const id: string = String(params.id ?? '');
   if (!id) return res.status(400).json({ error: 'Missing user id' });
 
-  await deleteUserFromCompany(admin, id);
+  await deleteUserFromCompany(id);
   return res.status(200).json({ message: 'User removed' });
 }
 
