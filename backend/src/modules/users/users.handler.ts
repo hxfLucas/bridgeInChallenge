@@ -4,6 +4,7 @@ import { isValidEmail } from '../../shared/utils/validateEmail';
 import { AddUserDto } from './users.dtos';
 import { User } from './users.entity';
 import { createUserForCompany, deleteUserFromCompany, updateUserPassword as updateUserPasswordService } from './users.service';
+import { getAuthenticatedUserData } from '../../shared/auth/authContext';
 
 export async function addUser(req: Request<{}, {}, AddUserDto>, res: Response) {
 
@@ -34,16 +35,15 @@ export async function removeUser(req: Request<{ id: string }>, res: Response) {
   const id: string = req.params?.id;
   if (!id) return res.status(400).json({ error: 'Missing user id' });
 
-  await deleteUserFromCompany(id);
+  const companyId = getAuthenticatedUserData().companyId;
+  await deleteUserFromCompany(id,companyId);
   return res.status(200).json({ message: 'User removed' });
 }
 
 export async function usersList(req: Request, res: Response) {
   const { limit, page, size, search } = req.query;
 
-  const u = req.user!;
-  const companyId = (u as any).companyId;
-  if (!companyId) return res.sendStatus(401);
+  const companyId = getAuthenticatedUserData().companyId;
 
   const repo = getAppDataSource().getRepository(User);
   const qb = repo.createQueryBuilder('user').where('user.companyId = :companyId', { companyId });

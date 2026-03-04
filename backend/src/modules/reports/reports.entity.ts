@@ -31,12 +31,6 @@ export class Report {
   @Column({ type: 'text', nullable: false })
   description!: string;
 
-  @Column({ name: 'is_anonymous', type: 'boolean', nullable: false })
-  isAnonymous!: boolean;
-
-  @Column({ name: 'reporter_email', type: 'varchar', nullable: true })
-  reporterEmail!: string | null;
-
   @Column({ type: 'varchar', nullable: false })
   status!: ReportStatus;
 

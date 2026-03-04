@@ -6,6 +6,7 @@ import AcpLayout from '../views/acp';
 import UsersPage from '../views/acp/users';
 import ReportsPage from '../views/acp/reports';
 import MagicLinksPage from '../views/acp/magiclinks';
+import ReportPage from '../views/report';
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
   {
     path: '/sign-up',
     element: <SignUpPage />,
+  },
+  {
+    path: '/report/:reportTokenId',
+    element: <ReportPage />,
   },
   {
     path: '/acp',

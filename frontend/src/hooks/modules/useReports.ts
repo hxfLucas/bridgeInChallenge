@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { getReports } from '../../api/reports.api';
+import { getReports, deleteReport, updateReportStatus } from '../../api/reports.api';
 import type { Report, ReportStatus } from '../../api/reports.api';
 
 interface ReportsState {
@@ -36,5 +36,31 @@ export function useReports() {
     }
   }, []);
 
-  return { ...state, fetchReports };
+  const removeReport = useCallback(async (id: string) => {
+    try {
+      await deleteReport(id);
+      setState((prev) => ({
+        ...prev,
+        reports: prev.reports.filter((r) => r.id !== id),
+      }));
+    } catch (err: any) {
+      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to delete report';
+      setState((prev) => ({ ...prev, error: message }));
+    }
+  }, []);
+
+  const changeReportStatus = useCallback(async (id: string, status: ReportStatus) => {
+    try {
+      const updated = await updateReportStatus({ id, status });
+      setState((prev) => ({
+        ...prev,
+        reports: prev.reports.map((r) => (r.id === id ? updated : r)),
+      }));
+    } catch (err: any) {
+      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to update status';
+      setState((prev) => ({ ...prev, error: message }));
+    }
+  }, []);
+
+  return { ...state, fetchReports, removeReport, changeReportStatus };
 }

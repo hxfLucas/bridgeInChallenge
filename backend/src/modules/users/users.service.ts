@@ -47,9 +47,9 @@ export async function createUserForCompany(
   return saved;
 }
 
-export async function deleteUserFromCompany(id: string): Promise<void> {
-  const authData = getAuthenticatedUserData();
-  if (authData.role !== 'admin') {
+export async function deleteUserFromCompany(id: string, companyId:string): Promise<void> {
+
+  if (getAuthenticatedUserData().role !== 'admin') {
     const err: any = new Error('Forbidden');
     err.code = 'FORBIDDEN';
     err.status = 403;
@@ -57,7 +57,7 @@ export async function deleteUserFromCompany(id: string): Promise<void> {
   }
 
   const repo = getAppDataSource().getRepository(User);
-  const user = await repo.findOneBy({ id, companyId: authData.companyId });
+  const user = await repo.findOneBy({ id, companyId: companyId });
   if (!user) {
     const err: any = new Error('User not found');
     err.code = 'NOT_FOUND';
@@ -65,12 +65,6 @@ export async function deleteUserFromCompany(id: string): Promise<void> {
     throw err;
   }
 
-  if (user.companyId !== authData.companyId) {
-    const err: any = new Error('Cannot operate on users from other companies');
-    err.code = 'FORBIDDEN';
-    err.status = 403;
-    throw err;
-  }
 
   if (user.role === 'admin') {
     const err: any = new Error('Cannot delete admin users');

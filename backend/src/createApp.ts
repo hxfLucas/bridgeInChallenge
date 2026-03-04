@@ -6,6 +6,7 @@ import errorHandler from './shared/middleware/errorHandler';
 import authRouter from './modules/auth/auth.routes';
 import usersRouter from './modules/users/users.routes';
 import magiclinksRouter from './modules/magiclinks/magiclinks.routes';
+import reportsRouter from './modules/reports/reports.routes';
 
 import { requestContextMiddleware } from './shared/auth/requestContext';
 
@@ -28,6 +29,7 @@ export async function createApp(dataSource?: any){
         app.use('/auth', authRouter);
         app.use('/users', usersRouter);
         app.use('/magiclinks', magiclinksRouter);
+        app.use('/reports', reportsRouter);
 
         app.use(errorHandler);
         return app;
