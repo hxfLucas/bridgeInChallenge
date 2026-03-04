@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
   IconButton, LinearProgress, Paper, Snackbar, Table, TableBody,
@@ -9,16 +9,33 @@ import { useMagicLinks } from '../../../hooks/modules/useMagicLinks';
 import { useAuthContext } from '../../../contexts/AuthContext';
 
 export default function MagicLinksPage() {
-  const { magicLinks, isLoading, error, fetchMagicLinks, generateMagicLink, removeMagicLink } = useMagicLinks();
+  const { magicLinks, isLoading, isLoadingMore, error, fetchInitial, loadMore, generateMagicLink, removeMagicLink } = useMagicLinks();
   const { user } = useAuthContext();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [aliasInput, setAliasInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    fetchMagicLinks();
+    fetchInitial();
   }, []);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   const handleConfirmGenerate = async () => {
     await generateMagicLink(aliasInput || undefined);
@@ -140,6 +157,9 @@ export default function MagicLinksPage() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <div ref={sentinelRef} style={{ height: 1 }} />
+      {isLoadingMore && <LinearProgress sx={{ mt: 1 }} />}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>Generate Magic Link</DialogTitle>

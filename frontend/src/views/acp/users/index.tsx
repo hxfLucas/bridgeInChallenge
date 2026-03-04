@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -26,7 +26,7 @@ import { useUsers } from '../../../hooks/modules/useUsers';
 import { useAuthContext } from '../../../contexts/AuthContext';
 
 export default function UsersPage() {
-  const { users, isLoading, error, fetchUsers, addUser, removeUser, updateUserPassword } = useUsers();
+  const { users, isLoading, isLoadingMore, error, fetchInitial, loadMore, addUser, removeUser, updateUserPassword } = useUsers();
   const { user: currentUser } = useAuthContext();
   const isManager = currentUser?.role === 'manager';
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -37,9 +37,26 @@ export default function UsersPage() {
   const [editUserId, setEditUserId] = useState<string>('');
   const [editPassword, setEditPassword] = useState('');
 
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    fetchUsers();
+    fetchInitial();
   }, []);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   const handleOpenDialog = () => {
     setName('');
@@ -172,6 +189,9 @@ export default function UsersPage() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <div ref={sentinelRef} style={{ height: 1 }} />
+      {isLoadingMore && <LinearProgress sx={{ mt: 1 }} />}
 
       {/* Add User Dialog */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="xs" fullWidth>

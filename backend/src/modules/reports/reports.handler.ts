@@ -19,8 +19,10 @@ export async function submitReportHandler(req: Request, res: Response) {
 }
 
 export async function listReportsHandler(req: Request, res: Response) {
-  const reports = await listReports();
-  return res.json({ items: reports });
+  const limit = Math.min(Number(req.query.limit) || 25, 100);
+  const offset = Math.max(Number(req.query.offset) || 0, 0);
+  const result = await listReports(offset, limit);
+  return res.json(result);
 }
 
 export async function deleteReportHandler(req: Request<{ id: string }>, res: Response) {

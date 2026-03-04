@@ -1,9 +1,7 @@
 import { Request, Response } from 'express';
-import { getAppDataSource } from '../../shared/database/data-source';
 import { isValidEmail } from '../../shared/utils/validateEmail';
 import { AddUserDto } from './users.dtos';
-import { User } from './users.entity';
-import { createUserForCompany, deleteUserFromCompany, updateUserPassword as updateUserPasswordService } from './users.service';
+import { createUserForCompany, deleteUserFromCompany, updateUserPassword as updateUserPasswordService, listUsers } from './users.service';
 import { getAuthenticatedUserData } from '../../shared/auth/authContext';
 
 export async function addUser(req: Request<{}, {}, AddUserDto>, res: Response) {
@@ -41,26 +39,13 @@ export async function removeUser(req: Request<{ id: string }>, res: Response) {
 }
 
 export async function usersList(req: Request, res: Response) {
-  const { limit, page, size, search } = req.query;
+  const limit = Math.min(Number(req.query.limit) || 25, 100);
+  const offset = Math.max(Number(req.query.offset) || 0, 0);
+  const { search } = req.query;
 
   const companyId = getAuthenticatedUserData().companyId;
 
-  const repo = getAppDataSource().getRepository(User);
-  const qb = repo.createQueryBuilder('user').where('user.companyId = :companyId', { companyId });
+  const result = await listUsers({ companyId, offset, limit, search: search ? String(search) : undefined });
 
-  if (search) {
-    qb.andWhere('user.searchable LIKE :search', { search: `%${String(search)}%` });
-  }
-
-  const pageNum = Number(page) || 1;
-  const sizeNum = Number(size) || Number(limit) || 10;
-  const calculatedOffset = (pageNum - 1) * sizeNum;
-
-  qb.orderBy('user.id', 'DESC').limit(Number(limit) || sizeNum).offset(calculatedOffset);
-
-  const items = await qb.getMany();
-
-  return res.json({
-    items: items.map((u) => ({ id: u.id, email: u.email, role: u.role, companyId: u.companyId, createdAt: u.createdAt })),
-  });
+  return res.json(result);
 }

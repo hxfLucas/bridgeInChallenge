@@ -9,8 +9,10 @@ export async function listMagicLinks(req: Request, res: Response): Promise<void>
     res.status(400).json({ error: 'companyId is required' })
     return
   }
-  const items = await listByCompany(companyId)
-  res.status(200).json(items)
+  const limit = Math.min(Number(req.query.limit) || 25, 100)
+  const offset = Math.max(Number(req.query.offset) || 0, 0)
+  const result = await listByCompany(companyId, offset, limit)
+  res.status(200).json(result)
 }
 
 export async function createNewMagicLink(req: Request, res: Response): Promise<void> {

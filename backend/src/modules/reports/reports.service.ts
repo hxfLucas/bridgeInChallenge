@@ -56,7 +56,7 @@ export async function submitReport(payload: {
   return repo.save(report);
 }
 
-export async function listReports(): Promise<Report[]> {
+export async function listReports(offset: number = 0, limit: number = 25): Promise<{ data: Report[]; total: number; hasMore: boolean }> {
   const authData = getAuthenticatedUserData();
 
   if (!authData.companyId) {
@@ -66,10 +66,14 @@ export async function listReports(): Promise<Report[]> {
   }
 
   const repo = getAppDataSource().getRepository(Report);
-  return repo.find({
+  const [items, total] = await repo.findAndCount({
     where: { companyId: authData.companyId },
     order: { createdAt: 'DESC' },
+    skip: offset,
+    take: limit,
   });
+
+  return { data: items, total, hasMore: offset + items.length < total };
 }
 
 export async function deleteReport(id: string): Promise<void> {

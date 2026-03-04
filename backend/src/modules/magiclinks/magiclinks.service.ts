@@ -2,14 +2,16 @@ import { getAppDataSource } from '../../shared/database/data-source'
 import { MagicLink } from './magiclinks.entity'
 import { generateMagicLinkData } from './magiclinks.utils'
 
-export async function listByCompany(companyId: string): Promise<MagicLink[]> {
+export async function listByCompany(companyId: string, offset: number = 0, limit: number = 25): Promise<{ data: MagicLink[]; total: number; hasMore: boolean }> {
   const repo = getAppDataSource().getRepository(MagicLink)
-  const items = await repo.find({
+  const [items, total] = await repo.findAndCount({
     where: { companyId },
     relations: ['createdBy'],
     order: { createdAt: 'DESC' },
+    skip: offset,
+    take: limit,
   })
-  return items
+  return { data: items, total, hasMore: offset + items.length < total }
 }
 
 export async function createMagicLink(companyId: string, alias?: string | null, createdById?: string | null): Promise<MagicLink> {

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   listMagicLinks as apiListMagicLinks,
   createMagicLink as apiCreateMagicLink,
@@ -6,28 +6,66 @@ import {
 } from '../../api/magiclinks.api';
 import type { MagicLink } from '../../api/magiclinks.api';
 
+const LIMIT = 25;
+
 interface MagicLinksState {
   magicLinks: MagicLink[];
+  total: number;
+  hasMore: boolean;
   isLoading: boolean;
+  isLoadingMore: boolean;
   error: string | null;
 }
 
 export function useMagicLinks() {
   const [state, setState] = useState<MagicLinksState>({
     magicLinks: [],
+    total: 0,
+    hasMore: false,
     isLoading: false,
+    isLoadingMore: false,
     error: null,
   });
 
-  const fetchMagicLinks = useCallback(async () => {
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+  const offsetRef = useRef(0);
+  const hasMoreRef = useRef(false);
+  const isLoadingMoreRef = useRef(false);
+
+  const fetchInitial = useCallback(async () => {
+    offsetRef.current = 0;
+    isLoadingMoreRef.current = false;
+    setState((prev) => ({ ...prev, magicLinks: [], total: 0, hasMore: false, isLoading: true, error: null }));
     try {
-      const magicLinks = await apiListMagicLinks();
-      setState({ magicLinks, isLoading: false, error: null });
+      const res = await apiListMagicLinks(0, LIMIT);
+      offsetRef.current = res.data.length;
+      hasMoreRef.current = res.hasMore;
+      setState({ magicLinks: res.data, total: res.total, hasMore: res.hasMore, isLoading: false, isLoadingMore: false, error: null });
     } catch (err: any) {
       const message = err?.response?.data?.error ?? err?.message ?? 'Failed to fetch magic links';
       setState((prev) => ({ ...prev, isLoading: false, error: message }));
-      throw err;
+    }
+  }, []);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMoreRef.current || !hasMoreRef.current) return;
+    isLoadingMoreRef.current = true;
+    setState((prev) => ({ ...prev, isLoadingMore: true }));
+    try {
+      const res = await apiListMagicLinks(offsetRef.current, LIMIT);
+      offsetRef.current += res.data.length;
+      hasMoreRef.current = res.hasMore;
+      setState((prev) => ({
+        ...prev,
+        magicLinks: [...prev.magicLinks, ...res.data],
+        total: res.total,
+        hasMore: res.hasMore,
+        isLoadingMore: false,
+      }));
+    } catch (err: any) {
+      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to load more';
+      setState((prev) => ({ ...prev, isLoadingMore: false, error: message }));
+    } finally {
+      isLoadingMoreRef.current = false;
     }
   }, []);
 
@@ -60,5 +98,5 @@ export function useMagicLinks() {
     }
   }, []);
 
-  return { ...state, fetchMagicLinks, generateMagicLink, removeMagicLink };
+  return { ...state, fetchInitial, loadMore, generateMagicLink, removeMagicLink, fetchMagicLinks: fetchInitial };
 }

@@ -105,3 +105,28 @@ export async function updateUserPassword(payload: { id: string; password: string
   user.passwordHash = passwordHash;
   await repo.save(user);
 }
+
+export async function listUsers(params: {
+  companyId: string;
+  offset: number;
+  limit: number;
+  search?: string;
+}): Promise<{ data: Array<{ id: string; email: string; role: string; companyId: string; createdAt: Date }>; total: number; hasMore: boolean }> {
+  const repo = getAppDataSource().getRepository(User);
+  const qb = repo.createQueryBuilder('user').where('user.companyId = :companyId', { companyId: params.companyId });
+
+  if (params.search) {
+    qb.andWhere('user.searchable LIKE :search', { search: `%${params.search}%` });
+  }
+
+  qb.orderBy('user.createdAt', 'DESC').addOrderBy('user.id', 'DESC');
+  qb.skip(params.offset).take(params.limit);
+
+  const [items, total] = await qb.getManyAndCount();
+
+  return {
+    data: items.map((u) => ({ id: u.id, email: u.email, role: u.role, companyId: u.companyId, createdAt: u.createdAt })),
+    total,
+    hasMore: params.offset + items.length < total,
+  };
+}

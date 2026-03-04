@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -49,7 +49,7 @@ function formatDateWithOrdinal(dateString: string): string {
 }
 
 export default function ReportsPage() {
-  const { reports, isLoading, error, fetchReports, removeReport, changeReportStatus } = useReports();
+  const { reports, isLoading, isLoadingMore, error, fetchInitial, loadMore, removeReport, changeReportStatus } = useReports();
   const { user: currentUser } = useAuthContext();
   const isManager = currentUser?.role === 'manager';
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -58,9 +58,26 @@ export default function ReportsPage() {
   // For viewing report details
   const [viewReport, setViewReport] = useState<Report | null>(null);
 
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    fetchReports();
+    fetchInitial();
   }, []);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   const handleOpenDeleteDialog = (id: string) => {
     setPendingDeleteId(id);
@@ -168,6 +185,9 @@ export default function ReportsPage() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <div ref={sentinelRef} style={{ height: 1 }} />
+      {isLoadingMore && <LinearProgress sx={{ mt: 1 }} />}
 
       {/* Delete Confirm Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>

@@ -1,6 +1,7 @@
 import api from './axios';
 
 export type ReportStatus = 'new' | 'in_review' | 'resolved' | 'rejected';
+export type PaginatedResponse<T> = { data: T[]; total: number; hasMore: boolean; };
 
 export type Report = {
   id: string;
@@ -17,9 +18,11 @@ export type ValidateReportResponse = {
   companyName: string;
 };
 
-export async function getReports(): Promise<Report[]> {
-  const { data } = await api.get<{ items: Report[] }>('/reports/list');
-  return data.items;
+export async function getReports(offset = 0, limit = 25): Promise<PaginatedResponse<Report>> {
+  const { data } = await api.get<PaginatedResponse<Report>>('/reports/list', {
+    params: { offset, limit },
+  });
+  return data;
 }
 
 export async function validateReport(token: string): Promise<ValidateReportResponse> {

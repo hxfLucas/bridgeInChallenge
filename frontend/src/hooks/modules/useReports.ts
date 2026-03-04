@@ -1,10 +1,16 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { getReports, deleteReport, updateReportStatus } from '../../api/reports.api';
+import { refreshInternal as refreshNotifications } from './useNotifications';
 import type { Report, ReportStatus } from '../../api/reports.api';
+
+const LIMIT = 25;
 
 interface ReportsState {
   reports: Report[];
+  total: number;
+  hasMore: boolean;
   isLoading: boolean;
+  isLoadingMore: boolean;
   error: string | null;
 }
 
@@ -23,16 +29,47 @@ export const STATUS_COLORS: Record<ReportStatus, 'default' | 'info' | 'warning' 
 };
 
 export function useReports() {
-  const [state, setState] = useState<ReportsState>({ reports: [], isLoading: false, error: null });
+  const [state, setState] = useState<ReportsState>({ reports: [], total: 0, hasMore: false, isLoading: false, isLoadingMore: false, error: null });
 
-  const fetchReports = useCallback(async () => {
-    setState({ reports: [], isLoading: true, error: null });
+  const offsetRef = useRef(0);
+  const hasMoreRef = useRef(false);
+  const isLoadingMoreRef = useRef(false);
+
+  const fetchInitial = useCallback(async () => {
+    offsetRef.current = 0;
+    isLoadingMoreRef.current = false;
+    setState((prev) => ({ ...prev, reports: [], total: 0, hasMore: false, isLoading: true, error: null }));
     try {
-      const reports = await getReports();
-      setState({ reports, isLoading: false, error: null });
+      const res = await getReports(0, LIMIT);
+      offsetRef.current = res.data.length;
+      hasMoreRef.current = res.hasMore;
+      setState({ reports: res.data, total: res.total, hasMore: res.hasMore, isLoading: false, isLoadingMore: false, error: null });
     } catch (err: any) {
       const message = err?.response?.data?.error ?? err?.message ?? 'Failed to load reports';
-      setState({ reports: [], isLoading: false, error: message });
+      setState((prev) => ({ ...prev, isLoading: false, error: message }));
+    }
+  }, []);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMoreRef.current || !hasMoreRef.current) return;
+    isLoadingMoreRef.current = true;
+    setState((prev) => ({ ...prev, isLoadingMore: true }));
+    try {
+      const res = await getReports(offsetRef.current, LIMIT);
+      offsetRef.current += res.data.length;
+      hasMoreRef.current = res.hasMore;
+      setState((prev) => ({
+        ...prev,
+        reports: [...prev.reports, ...res.data],
+        total: res.total,
+        hasMore: res.hasMore,
+        isLoadingMore: false,
+      }));
+    } catch (err: any) {
+      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to load more';
+      setState((prev) => ({ ...prev, isLoadingMore: false, error: message }));
+    } finally {
+      isLoadingMoreRef.current = false;
     }
   }, []);
 
@@ -43,6 +80,12 @@ export function useReports() {
         ...prev,
         reports: prev.reports.filter((r) => r.id !== id),
       }));
+      // trigger notifications refresh so navbar badge updates immediately
+      try {
+        refreshNotifications();
+      } catch (_) {
+        // swallow any refresh errors
+      }
     } catch (err: any) {
       const message = err?.response?.data?.error ?? err?.message ?? 'Failed to delete report';
       setState((prev) => ({ ...prev, error: message }));
@@ -56,11 +99,17 @@ export function useReports() {
         ...prev,
         reports: prev.reports.map((r) => (r.id === id ? updated : r)),
       }));
+      // refresh notifications so badge updates immediately after status change
+      try {
+        refreshNotifications();
+      } catch (_) {
+        // ignore
+      }
     } catch (err: any) {
       const message = err?.response?.data?.error ?? err?.message ?? 'Failed to update status';
       setState((prev) => ({ ...prev, error: message }));
     }
   }, []);
 
-  return { ...state, fetchReports, removeReport, changeReportStatus };
+  return { ...state, fetchInitial, loadMore, removeReport, changeReportStatus, fetchReports: fetchInitial };
 }

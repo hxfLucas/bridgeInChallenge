@@ -10,14 +10,13 @@ export type User = {
   createdAt: string;
 };
 export type AddUserPayload = { email: string; name: string; password: string };
+export type PaginatedResponse<T> = { data: T[]; total: number; hasMore: boolean; };
 
-type ListUsersResponse = {
-  items: User[];
-};
-
-export async function listUsers(): Promise<User[]> {
-  const { data } = await api.get<ListUsersResponse>('/users/list');
-  return data.items ?? [];
+export async function listUsers(offset = 0, limit = 25): Promise<PaginatedResponse<User>> {
+  const { data } = await api.get<PaginatedResponse<User>>('/users/list', {
+    params: { offset, limit },
+  });
+  return data;
 }
 
 export async function addUser(payload: AddUserPayload): Promise<User> {

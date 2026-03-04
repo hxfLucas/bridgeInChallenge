@@ -27,6 +27,7 @@ export default function ACPLayout() {
   const { signOut } = useAuth();
   const { unread } = useNotifications();
   const isReportsRoute = useIsReportsRoute();
+  console.log("Unread content: ", unread);
 
   const navItems = [
     { label: 'Reports', path: '/acp/reports', icon: <AssessmentIcon /> },
@@ -91,6 +92,7 @@ export default function ACPLayout() {
             )}
             <Badge
               badgeContent={unread}
+              invisible={unread === 0}
               color="error"
               max={99}
               overlap="circular"
@@ -102,6 +104,7 @@ export default function ACPLayout() {
                 mr: 1,
                 cursor: isReportsRoute ? 'default' : 'pointer',
                 '& .MuiBadge-badge': {
+                  display: unread === 0 ? 'none' : 'inline-flex',
                   transform: 'translate(-35%, 35%)',
                   fontSize: theme.typography.pxToRem(9),
                   height: 16,
