@@ -4,7 +4,7 @@ import {
   IconButton, LinearProgress, Paper, Snackbar, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography,
 } from '@mui/material';
-import { Delete as DeleteIcon, VpnKey as VpnKeyIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, VpnKey as VpnKeyIcon, ContentCopy as ContentCopyIcon, Check as CheckIcon } from '@mui/icons-material';
 import { useMagicLinks } from '../../../hooks/modules/useMagicLinks';
 import { useAuthContext } from '../../../contexts/AuthContext';
 
@@ -81,20 +81,40 @@ export default function MagicLinksPage() {
                     </TableCell>
                     <TableCell>
                       <Tooltip title={copiedId === link.id ? 'Copied!' : 'Click to copy'}>
-                        <Typography
-                          variant="body2"
-                          fontFamily="monospace"
-                          sx={{ cursor: 'pointer' }}
+                        <Box
                           onClick={() => handleCopyLink(link.id, fullUrl)}
+                          onMouseLeave={() => setCopiedId(null)}
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            bgcolor: '#FFF59D',
+                            color: 'black',
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1,
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s',
+                            '&:hover': {
+                              bgcolor: '#FFF066'
+                            }
+                          }}
                         >
-                          {fullUrl}
-                        </Typography>
+                          <Typography variant="body2" fontFamily="monospace">
+                            {fullUrl}
+                          </Typography>
+                          {copiedId === link.id ? (
+                            <CheckIcon fontSize="small" color="success" />
+                          ) : (
+                            <ContentCopyIcon fontSize="small" color="action" />
+                          )}
+                        </Box>
                       </Tooltip>
                     </TableCell>
                     <TableCell>
                       {link.createdBy ? (
-                        <Tooltip title={link.createdBy.email}>
-                          <span>{truncateEmail(link.createdBy.email)}</span>
+                        <Tooltip title={link.createdBy.email ?? '—'}>
+                          <span>{link?.createdBy?.email ? truncateEmail(link.createdBy.email) : '—'}</span>
                         </Tooltip>
                       ) : '—'}
                     </TableCell>
