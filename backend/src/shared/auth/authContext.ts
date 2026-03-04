@@ -3,6 +3,7 @@ import { AsyncLocalStorage } from 'async_hooks';
 export type AuthenticatedUser = {
   id: string;
   role: string;
+  companyId:string;
 };
 
 const storage = new AsyncLocalStorage<AuthenticatedUser>();

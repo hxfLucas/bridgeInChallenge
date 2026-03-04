@@ -63,7 +63,7 @@ export default function ACPLayout() {
       </Drawer>
 
       {/* Main area */}
-      <Box display="flex" flexDirection="column" flexGrow={1}>
+      <Box display="flex" width={'100%'} flexDirection="column" flexGrow={1}>
         <AppBar
           position="static"
           elevation={0}

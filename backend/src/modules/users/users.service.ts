@@ -7,27 +7,18 @@ import { getAuthenticatedUserData } from '../../shared/auth/authContext';
 export type AdminContext = { id: string; role: string; companyId?: string };
 
 export async function createUserForCompany(
-  admin: AdminContext,
   payload: { email: string; }
 ): Promise<User> {
-  const authenticatedRole = getAuthenticatedUserData().role;
-  
-  if (admin.role !== 'admin') {
+
+  if (getAuthenticatedUserData().role !== 'admin') {
     const err: any = new Error('Forbidden');
     err.code = 'FORBIDDEN';
     err.status = 403;
     throw err;
   }
 
-  if (!admin.companyId) {
-    const err: any = new Error('Missing company');
-    err.code = 'FORBIDDEN';
-    err.status = 403;
-    throw err;
-  }
-
   const repo = getAppDataSource().getRepository(User);
-  const existing = await repo.findOneBy({ email: payload.email });
+  const existing = await repo.findOneBy({ email: payload.email, companyId: getAuthenticatedUserData().companyId });
   if (existing) {
     const err: any = new Error('Email already in use');
     err.code = 'DUPLICATE_EMAIL';
@@ -46,7 +37,7 @@ export async function createUserForCompany(
   });
 
   const user = repo.create({
-    companyId: admin.companyId,
+    companyId: getAuthenticatedUserData().companyId,
     email: payload.email,
     passwordHash,
     role: 'manager',

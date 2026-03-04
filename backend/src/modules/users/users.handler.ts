@@ -2,15 +2,16 @@ import { Request, Response } from 'express';
 import { getAppDataSource } from '../../shared/database/data-source';
 import { User } from './users.entity';
 import { createUserForCompany, deleteUserFromCompany } from './users.service';
+import { getAuthenticatedUserData } from '../../shared/auth/authContext';
+import { isValidEmail } from '../../shared/utils/validateEmail';
 
-export async function addUser(req: Request, res: Response) {
-  const u = req.user!;
-  const admin = { id: u.sub, role: u.role, companyId: (u as any).companyId };
+export async function addUser(req: Request<{}, {}, { email: string }>, res: Response) {
+
   const { email } = req.body ?? {};
 
-  if (typeof email !== 'string' || !email) return res.status(400).json({ error: 'Invalid or missing email' });
+  if (typeof email !== 'string' || !email || !isValidEmail(email)) return res.status(400).json({ error: 'Invalid or missing email' });
 
-  const created = await createUserForCompany(admin, { email });
+  const created = await createUserForCompany({ email });
   const { password, ...safe } = (created as any);
   return res.status(201).json(safe);
 }

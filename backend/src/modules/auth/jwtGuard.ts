@@ -6,6 +6,7 @@ type AccessTokenPayload = JwtPayload & {
   sub: string;
   email: string;
   role: string;
+  companyId: string;
 };
 
 export function jwtGuard(req: Request, res: Response, next: NextFunction): void {
@@ -24,7 +25,7 @@ export function jwtGuard(req: Request, res: Response, next: NextFunction): void 
   try {
     const payload = jwt.verify(accessToken, secret, { algorithms: ['HS256'] }) as AccessTokenPayload;
     req.user = payload;
-    runWithAuthUser({ id: payload.sub, role: payload.role }, next);
+    runWithAuthUser({ id: payload.sub, role: payload.role, companyId: payload.companyId }, next);
   } catch {
     res.status(401).json({ error: 'unauthorized' });
   }

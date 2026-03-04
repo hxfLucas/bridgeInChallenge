@@ -77,12 +77,17 @@ function verifyPassword(password: string, storedHash: string): Promise<boolean> 
   });
 }
 
-function generateTokenPair(userId: string, email: string): { access_token: string; refresh_token: string } {
+function generateTokenPair(userId: string, role: string, companyId:string): { access_token: string; refresh_token: string } {
   const accessSecret = getAccessSecret();
   const refreshSecret = getRefreshSecret();
-
+  if(!userId){
+    throw createHttpError(500, 'User ID is missing');
+  }
+  if(!role){
+    throw createHttpError(500, 'User role is missing');
+  }
   const access_token = jwt.sign(
-    { sub: userId },
+    { sub: userId, role:role, companyId:companyId },
     accessSecret,
     { algorithm: 'HS256', expiresIn: '15m' }
   );
@@ -123,11 +128,13 @@ export async function signUp(req: Request, res: Response): Promise<void> {
   const newCompany = repositoryCompany.create({ name: company });
   const savedCompany = await repositoryCompany.save(newCompany);
 
+  const companyId = savedCompany.id;
   const passwordHash = await hashPassword(password);
-  const user = repository.create({ email, passwordHash, role: 'admin', company: savedCompany });
+  const roleToAssign = "admin";
+  const user = repository.create({ email, passwordHash, role: roleToAssign, company: savedCompany });
   await repository.save(user);
 
-  const { access_token, refresh_token } = generateTokenPair(user.id, user.email);
+  const { access_token, refresh_token } = generateTokenPair(user.id, roleToAssign, companyId);
   setAccessTokenCookie(res, access_token);
   res.status(201).json({ refresh_token });
 }
@@ -149,7 +156,7 @@ export async function signIn(req: Request, res: Response): Promise<void> {
     throw createHttpError(401, 'invalid credentials');
   }
 
-  const { access_token, refresh_token } = generateTokenPair(user.id, user.email);
+  const { access_token, refresh_token } = generateTokenPair(user.id, user.role, user.company.id);
   setAccessTokenCookie(res, access_token);
   res.status(200).json({ refresh_token });
 }
@@ -177,7 +184,7 @@ export async function refreshTokens(req: Request, res: Response): Promise<void> 
     throw createHttpError(401, 'token pair mismatch');
   }
 
-  const { access_token, refresh_token: newRefreshToken } = generateTokenPair(payload.sub, payload.email);
+  const { access_token, refresh_token: newRefreshToken } = generateTokenPair(payload.sub, payload.role, payload.companyId);
   setAccessTokenCookie(res, access_token);
   res.status(200).json({ refresh_token: newRefreshToken });
 }
@@ -193,6 +200,8 @@ export async function checkSession(req: Request, res: Response): Promise<void> {
     user: {
       id: payload.sub,
       email: payload.email,
+      role: payload.role,
+      companyId: payload.companyId,
     },
   });
 }

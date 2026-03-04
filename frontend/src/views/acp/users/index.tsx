@@ -127,14 +127,7 @@ export default function UsersPage() {
         <DialogTitle>Add New User</DialogTitle>
         <Box component="form" onSubmit={handleSubmit}>
           <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-            <TextField
-              label="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              fullWidth
-              autoFocus
-            />
+
             <TextField
               label="Email"
               type="email"

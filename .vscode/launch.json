@@ -9,6 +9,7 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["-r", "ts-node/register"],
       "program": "${workspaceFolder}/backend/src/index.ts",
+      "preLaunchTask": "npm: build",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "env": { "NODE_ENV": "development" },
