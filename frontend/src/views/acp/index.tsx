@@ -16,6 +16,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useAuth } from '../../hooks/modules/useAuth';
 import { useNotifications } from '../../hooks/modules/useNotifications';
+import useIsReportsRoute from '../../hooks/useIsReportsRoute';
 
 const DRAWER_WIDTH = 240;
 
@@ -24,7 +25,8 @@ export default function ACPLayout() {
   const location = useLocation();
   const { user } = useAuthContext();
   const { signOut } = useAuth();
-  const { unread, refresh } = useNotifications();
+  const { unread } = useNotifications();
+  const isReportsRoute = useIsReportsRoute();
 
   const navItems = [
     { label: 'Reports', path: '/acp/reports', icon: <AssessmentIcon /> },
@@ -88,7 +90,13 @@ export default function ACPLayout() {
               </Typography>
             )}
             <Badge badgeContent={unread} color="error" max={99} sx={{ mr: 1 }}>
-              <IconButton size="small" aria-label="New Reports" onClick={refresh}>
+              <IconButton
+                size="small"
+                aria-label="New Reports"
+                disabled={isReportsRoute}
+                onClick={() => navigate('/acp/reports')}
+                sx={{ color: isReportsRoute ? 'text.disabled' : undefined }}
+              >
                 <SummarizeIcon fontSize="small" />
               </IconButton>
             </Badge>
