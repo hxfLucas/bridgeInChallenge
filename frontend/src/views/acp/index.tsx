@@ -10,10 +10,12 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import { Assessment as AssessmentIcon, People as PeopleIcon, VpnKey as VpnKeyIcon } from '@mui/icons-material';
+import { Assessment as AssessmentIcon, People as PeopleIcon, VpnKey as VpnKeyIcon, Notifications as NotificationsIcon } from '@mui/icons-material';
+import { IconButton } from '@mui/material';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useAuth } from '../../hooks/modules/useAuth';
+import { useNotifications } from '../../hooks/modules/useNotifications';
 
 const DRAWER_WIDTH = 240;
 
@@ -22,6 +24,7 @@ export default function ACPLayout() {
   const location = useLocation();
   const { user } = useAuthContext();
   const { signOut } = useAuth();
+  const { unread, refresh } = useNotifications();
 
   const navItems = [
     { label: 'Reports', path: '/acp/reports', icon: <AssessmentIcon /> },
@@ -82,6 +85,14 @@ export default function ACPLayout() {
             {user?.email && (
               <Typography variant="body2" mr={2} color="text.secondary">
                 {user.email}
+              </Typography>
+            )}
+            <IconButton size="small" aria-label="Notifications" onClick={refresh} sx={{ mr: 1 }}>
+              <NotificationsIcon fontSize="small" />
+            </IconButton>
+            {unread > 0 && (
+              <Typography variant="body2" mr={2} color="text.secondary">
+                ({unread > 9 ? '9+' : unread})
               </Typography>
             )}
             <Button variant="outlined" size="small" onClick={signOut}>

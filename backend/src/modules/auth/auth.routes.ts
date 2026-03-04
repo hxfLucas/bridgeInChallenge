@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { checkSession, refreshTokens, signIn, signUp } from './auth.handler';
+import { checkSession, refreshTokens, signIn, signUp, getNotifications } from './auth.handler';
 import { jwtGuard } from './jwtGuard';
 
 const authRouter = Router();
@@ -8,6 +8,7 @@ authRouter.post('/sign-in', signIn);
 authRouter.post('/sign-up', signUp);
 authRouter.post('/refresh-tokens', refreshTokens);
 authRouter.get('/check-session', jwtGuard, checkSession);
+authRouter.get('/notifications', jwtGuard, getNotifications);
 
 export default authRouter;
 

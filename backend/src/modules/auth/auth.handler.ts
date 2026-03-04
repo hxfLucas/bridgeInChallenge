@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { getAppDataSource } from '../../shared/database/data-source';
@@ -206,4 +206,13 @@ export async function checkSession(req: Request, res: Response): Promise<void> {
       companyId: payload.companyId,
     },
   });
+}
+
+export async function getNotifications(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const payload = req.user as JwtPayload | undefined;
+  if (!payload?.sub) {
+    throw createHttpError(401, 'unauthorized');
+  }
+
+  res.status(200).json({ unread: 0 });
 }

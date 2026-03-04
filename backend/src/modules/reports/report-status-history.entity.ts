@@ -10,7 +10,7 @@ export class ReportStatusHistory {
   @Column({ name: 'report_id', type: 'uuid', nullable: false })
   reportId!: string;
 
-  @ManyToOne(() => Report, (report) => report.statusHistory, { nullable: false })
+  @ManyToOne(() => Report, (report) => report.statusHistory, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'report_id' })
   report!: Report;
 
@@ -23,7 +23,7 @@ export class ReportStatusHistory {
   @Column({ name: 'changed_by', type: 'uuid', nullable: false })
   changedBy!: string;
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User, { nullable: false, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'changed_by' })
   changedByUser!: User;
 
