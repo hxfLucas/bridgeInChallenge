@@ -89,7 +89,19 @@ export default function ACPLayout() {
                 {user.email}
               </Typography>
             )}
-            <Badge badgeContent={unread} color="error" max={99} sx={{ mr: 1 }}>
+            <Badge
+              badgeContent={unread}
+              color="error"
+              max={99}
+              overlap="circular"
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+              sx={{
+                mr: 1,
+                '& .MuiBadge-badge': {
+                  transform: 'translate(-45%, 40%)',
+                },
+              }}
+            >
               <IconButton
                 size="small"
                 aria-label="New Reports"
