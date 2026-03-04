@@ -23,7 +23,7 @@ export class MagicLink {
   @Column({ name: 'created_by_id', type: 'uuid', nullable: true })
   createdById!: string | null
 
-  @ManyToOne(() => User, { nullable: true, eager: false, onDelete: 'SET NULL' })
+  @ManyToOne(() => User, { nullable: true, eager: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'created_by_id' })
   createdBy!: User | null
 
