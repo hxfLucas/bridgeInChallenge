@@ -11,7 +11,7 @@ interface AuthActionState {
 }
 
 export function useAuth() {
-  const { setUser, signOut: contextSignOut } = useAuthContext();
+  const { updateSession, signOut: contextSignOut } = useAuthContext();
   const navigate = useNavigate();
   const [signInState, setSignInState] = useState<AuthActionState>({ isLoading: false, error: null });
   const [signUpState, setSignUpState] = useState<AuthActionState>({ isLoading: false, error: null });
@@ -22,10 +22,7 @@ export function useAuth() {
       const { refresh_token } = await apiSignIn(payload);
       setRefreshToken(refresh_token);
       const session = await checkSession();
-      if (session.valid) {
-        setUser(session.user);
-        setRefreshToken(session.refresh_token);
-      }
+      updateSession(session);
       navigate('/acp');
     } catch (err: any) {
       const message = err?.response?.data?.error ?? err?.message ?? 'Sign in failed';
@@ -33,7 +30,7 @@ export function useAuth() {
     } finally {
       setSignInState((prev) => ({ ...prev, isLoading: false }));
     }
-  }, [navigate, setUser]);
+  }, [navigate, updateSession]);
 
   const signUp = useCallback(async (payload: SignUpPayload) => {
     setSignUpState({ isLoading: true, error: null });
@@ -41,10 +38,7 @@ export function useAuth() {
       const { refresh_token } = await apiSignUp(payload);
       setRefreshToken(refresh_token);
       const session = await checkSession();
-      if (session.valid) {
-        setUser(session.user);
-        setRefreshToken(session.refresh_token);
-      }
+      updateSession(session);
       navigate('/acp');
     } catch (err: any) {
       const message = err?.response?.data?.error ?? err?.message ?? 'Sign up failed';
@@ -52,7 +46,7 @@ export function useAuth() {
     } finally {
       setSignUpState((prev) => ({ ...prev, isLoading: false }));
     }
-  }, [navigate, setUser]);
+  }, [navigate, updateSession]);
 
   const signOut = useCallback(() => {
     contextSignOut();

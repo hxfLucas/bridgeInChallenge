@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { checkSession, refreshTokens } from '../api/auth.api';
-import type { SessionUser } from '../api/auth.api';
+import { checkSession } from '../api/auth.api';
+import type { SessionUser, SessionResponse } from '../api/auth.api';
 import { clearRefreshToken, getRefreshToken, setRefreshToken } from '../api/axios';
 
 interface AuthContextValue {
   user: SessionUser | null;
   isLoading: boolean;
   setUser: (user: SessionUser | null) => void;
+  updateSession: (session: SessionResponse) => void;
   signOut: () => void;
 }
 
@@ -15,53 +16,60 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
 
   const signOut = useCallback(() => {
     clearRefreshToken();
     setUser(null);
+    setExpiresAt(null);
   }, []);
 
+  const updateSession = useCallback((session: SessionResponse) => {
+    if (session.valid) {
+      setUser(session.user);
+      setRefreshToken(session.refresh_token);
+      setExpiresAt(session.expiresAt);
+    }
+  }, []);
+
+  // On mount: restore session if a refresh token is stored
   useEffect(() => {
     if (!getRefreshToken()) {
       setIsLoading(false);
       return;
     }
     checkSession()
-      .then((session) => {
-        if (session.valid) {
-          setUser(session.user);
-          setRefreshToken(session.refresh_token);
-        }
-      })
+      .then(updateSession)
       .catch(() => {
         // not authenticated — stay null
       })
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [updateSession]);
 
+  // Schedule proactive session refresh 10 minutes before access token expiry.
+  // checkSession renews both tokens and returns the new expiresAt,
+  // which triggers this effect again — creating a self-rescheduling timeout.
   useEffect(() => {
-    if (!user) return;
+    if (!user || !expiresAt) return;
 
-    const THIRTY_MINUTES = 30 * 60 * 1000;
-    const intervalId = setInterval(async () => {
-      const rt = getRefreshToken();
-      if (!rt) {
-        signOut();
-        return;
-      }
-      try {
-        const { refresh_token } = await refreshTokens(rt);
-        setRefreshToken(refresh_token);
-      } catch {
-        signOut();
-      }
-    }, THIRTY_MINUTES);
+    const TEN_MINUTES_MS = 10 * 60 * 1000;
+    const delay = expiresAt * 1000 - Date.now() - TEN_MINUTES_MS;
 
-    return () => clearInterval(intervalId);
-  }, [user, signOut]);
+    if (delay <= 0) {
+      // Already within the 10-minute window — refresh immediately
+      checkSession().then(updateSession).catch(signOut);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      checkSession().then(updateSession).catch(signOut);
+    }, delay);
+
+    return () => clearTimeout(timeoutId);
+  }, [expiresAt, user, signOut, updateSession]);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, setUser, signOut }}>
+    <AuthContext.Provider value={{ user, isLoading, setUser, updateSession, signOut }}>
       {children}
     </AuthContext.Provider>
   );

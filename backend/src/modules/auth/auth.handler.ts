@@ -219,9 +219,13 @@ export async function checkSession(req: Request, res: Response): Promise<void> {
   );
   setAccessTokenCookie(res, access_token);
 
+  const decoded = jwt.decode(access_token) as JwtPayload;
+  const expiresAt = decoded.exp!;
+
   res.status(200).json({
     valid: true,
     refresh_token,
+    expiresAt,
     user: {
       id: payload.sub,
       email: payload.email,
