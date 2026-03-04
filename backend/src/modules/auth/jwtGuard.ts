@@ -1,0 +1,29 @@
+import { NextFunction, Request, Response } from 'express';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+
+type AccessTokenPayload = JwtPayload & {
+  sub: string;
+  email: string;
+};
+
+export function jwtGuard(req: Request, res: Response, next: NextFunction): void {
+  const accessToken = req.cookies?.access_token as string | undefined;
+  if (!accessToken) {
+    res.status(401).json({ error: 'unauthorized' });
+    return;
+  }
+
+  const secret = process.env.JWT_ACCESS_SECRET;
+  if (!secret) {
+    res.status(500).json({ message: 'JWT_ACCESS_SECRET is not configured' });
+    return;
+  }
+
+  try {
+    const payload = jwt.verify(accessToken, secret, { algorithms: ['HS256'] }) as AccessTokenPayload;
+    req.user = payload;
+    next();
+  } catch {
+    res.status(401).json({ error: 'unauthorized' });
+  }
+}

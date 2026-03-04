@@ -197,3 +197,23 @@ export async function refreshTokens(req: Request, res: Response, next: NextFunct
     next(error);
   }
 }
+
+export async function checkSession(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const payload = req.user as JwtPayload | undefined;
+    if (!payload?.sub) {
+      next(createHttpError(401, 'unauthorized'));
+      return;
+    }
+
+    res.status(200).json({
+      valid: true,
+      user: {
+        id: payload.sub,
+        email: payload.email,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
