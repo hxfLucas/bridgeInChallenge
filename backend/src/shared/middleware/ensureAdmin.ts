@@ -1,11 +1,16 @@
-import { RequestHandler } from 'express';
+import { RequestHandler, Request, Response, NextFunction } from 'express';
+import { jwtGuard } from '../../modules/auth/jwtGuard';
 
-// Assumes `requestContextMiddleware` populates `req.user` with `{ id, role, companyId, ... }`.
+// Ensure the request is authenticated (via jwtGuard) and the user is an admin.
 export const ensureAdmin: RequestHandler = (req, res, next) => {
-  const user = (req as any).user;
-  if (!user) return res.status(401).json({ message: 'Unauthorized' });
-  if (user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
-  return next();
+  const afterJwt = (_err?: any) => {
+    const user = (req as any).user;
+    if (!user) return res.status(401).json({ message: 'Unauthorized' });
+    if (user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' });
+    return next();
+  };
+
+  jwtGuard(req as Request, res as Response, afterJwt as NextFunction);
 };
 
 export default ensureAdmin;

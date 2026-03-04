@@ -16,6 +16,6 @@ declare global {
 declare module 'express-serve-static-core' {
   interface Request {
     context?: any;
-    user?: any;
+    user?: { sub: string; email: string; role: string };
   }
 }

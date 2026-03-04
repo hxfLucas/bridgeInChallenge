@@ -1,36 +1,81 @@
-import {User} from '../users/users.entity';
-import { getAppDataSource } from '../../shared/database/data-source';
+import crypto from 'crypto';
+import  {getAppDataSource}  from '../../shared/database/data-source';
+import { User } from './users.entity';
 
-type AdminUser = { id: any; companyId: any; role?: string };
+export type AdminContext = { id: string; role: string; companyId?: string };
 
-export async function createUserForCompany(adminUser: AdminUser, { email, name }: { email: string; name: string }){
-  if (!email || !name) throw new Error('Invalid input');
+export async function createUserForCompany(
+  admin: AdminContext,
+  payload: { email: string; name: string }
+): Promise<User> {
+  if (admin.role !== 'admin') {
+    const err: any = new Error('Forbidden');
+    err.code = 'FORBIDDEN';
+    throw err;
+  }
+
+  if (!admin.companyId) {
+    const err: any = new Error('Missing company');
+    err.code = 'FORBIDDEN';
+    throw err;
+  }
+
   const repo = getAppDataSource().getRepository(User);
-  const existing = await repo.findOneBy({ email });
-  if (existing) throw { code: 'DUPLICATE_EMAIL' };
+  const existing = await repo.findOneBy({ email: payload.email });
+  if (existing) {
+    const err: any = new Error('Email already in use');
+    err.code = 'DUPLICATE_EMAIL';
+    throw err;
+  }
+
+  // generate a random password and hash it using the same scheme as auth.handler
+  const password = crypto.randomBytes(8).toString('hex');
+  const salt = crypto.randomBytes(16).toString('hex');
+  const passwordHash = await new Promise<string>((resolve, reject) => {
+    crypto.scrypt(password, salt, 64, (error, derivedKey) => {
+      if (error) return reject(error);
+      resolve(`${salt}:${derivedKey.toString('hex')}`);
+    });
+  });
 
   const user = repo.create({
-    email,
-    name,
-    role: 'manager', // force manager role for company-created users
-    companyId: adminUser.companyId,
+    companyId: admin.companyId,
+    name: payload.name,
+    email: payload.email,
+    passwordHash,
+    role: 'manager',
   } as Partial<User>);
 
-  return repo.save(user);
+  const saved = await repo.save(user);
+  return saved;
 }
 
-export async function deleteUserFromCompany(adminUser: AdminUser, targetUserId: any){
+export async function deleteUserFromCompany(admin: AdminContext, id: string): Promise<void> {
+  if (admin.role !== 'admin') {
+    const err: any = new Error('Forbidden');
+    err.code = 'FORBIDDEN';
+    throw err;
+  }
+
   const repo = getAppDataSource().getRepository(User);
-  const target = await repo.findOneBy({ id: targetUserId });
-  if (!target) throw { code: 'NOT_FOUND' };
-  if (target.companyId !== adminUser.companyId) throw { code: 'FORBIDDEN' };
-  if (target.role === 'admin') throw { code: 'CANNOT_DELETE_ADMIN' };
+  const user = await repo.findOneBy({ id });
+  if (!user) {
+    const err: any = new Error('User not found');
+    err.code = 'NOT_FOUND';
+    throw err;
+  }
 
-  await repo.remove(target);
-  return;
+  if (user.companyId !== admin.companyId) {
+    const err: any = new Error('Cannot operate on users from other companies');
+    err.code = 'FORBIDDEN';
+    throw err;
+  }
+
+  if (user.role === 'admin') {
+    const err: any = new Error('Cannot delete admin users');
+    err.code = 'CANNOT_DELETE_ADMIN';
+    throw err;
+  }
+
+  await repo.remove(user);
 }
-
-export default {
-  createUserForCompany,
-  deleteUserFromCompany,
-};

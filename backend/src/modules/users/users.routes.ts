@@ -4,14 +4,11 @@ import { createUserForCompany, deleteUserFromCompany } from './users.service';
 
 const router = Router();
 
-interface AuthReq extends Request {
-  user?: { id?: any; role?: string; companyId?: any };
-}
-
 // POST /users/add-user
-router.post('/add-user', ensureAdmin, async (req: AuthReq, res: Response) => {
+router.post('/add-user', ensureAdmin, async (req: Request, res: Response) => {
   try {
-    const admin = req.user!; // ensureAdmin guarantees presence and role
+    const u = req.user!; // ensureAdmin guarantees presence and role
+    const admin = { id: u.sub, role: u.role, companyId: (u as any).companyId };
     const { email, name } = req.body ?? {};
 
     if (typeof email !== 'string' || !email) return res.status(400).json({ error: 'Invalid or missing email' });
@@ -32,10 +29,11 @@ router.post('/add-user', ensureAdmin, async (req: AuthReq, res: Response) => {
 });
 
 // DELETE /users/remove-user/:id
-router.delete('/remove-user/:id', ensureAdmin, async (req: AuthReq, res: Response) => {
+router.delete('/remove-user/:id', ensureAdmin, async (req: Request<{ id: string }>, res: Response) => {
   try {
-    const admin = req.user!;
-    const { id } = req.params;
+    const u = req.user!;
+    const admin = { id: u.sub, role: u.role, companyId: (u as any).companyId };
+    const id: string = req.params?.id;
     if (!id) return res.status(400).json({ error: 'Missing user id' });
 
     try {
