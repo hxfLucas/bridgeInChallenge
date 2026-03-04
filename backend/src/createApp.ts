@@ -3,10 +3,8 @@ import cookieParser from 'cookie-parser';
 import createCorsMiddleware from './shared/middleware/cors';
 import { getAppDataSource, setAppDataSource } from './shared/database/data-source';
 import errorHandler from './shared/middleware/errorHandler';
-import contentsRouter from './modules/contents/contents.routes';
-import accountsRouter from './modules/accounts/accounts.routes';
-import productsRouter from './modules/products/products.routes';
-import apiRouter from './modules/api/v1/api.routes';
+import authRouter from './modules/auth/auth.routes';
+
 import { requestContextMiddleware } from './shared/auth/requestContext';
 
 export async function createApp(dataSource?: any){
@@ -25,10 +23,8 @@ export async function createApp(dataSource?: any){
         const ds = dataSource ?? getAppDataSource();
         await ds.initialize().catch((err:any) => console.error('DataSource init error', err));
 
-        app.use('/accounts', accountsRouter);
-        app.use('/contents', contentsRouter);
-        app.use('/products', productsRouter);
-        app.use('/api/v1', apiRouter);
+        app.use('/auth', authRouter);
+
         app.use(errorHandler);
         return app;
 }
