@@ -11,7 +11,7 @@ export class User {
   @Column({ name: 'company_id', type: 'uuid', nullable: false })
   companyId!: string;
 
-  @ManyToOne(() => Company, (company) => company.users, { nullable: false })
+  @ManyToOne(() => Company, (company) => company.users, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'company_id' })
   company!: Company;
 
