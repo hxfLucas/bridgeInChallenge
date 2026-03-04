@@ -14,13 +14,13 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
   TableRow,
   TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
+import TableContainerWrapper from '../../../components/TableContainerWrapper';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import { useUsers } from '../../../hooks/modules/useUsers';
 import { formatDate } from '../../../utils/formatDate';
@@ -115,7 +115,7 @@ export default function UsersPage() {
         </Alert>
       )}
 
-      <TableContainer component={Paper} variant="outlined">
+      <TableContainerWrapper component={Paper} variant="outlined">
         <Table>
           <TableHead>
             <TableRow>
@@ -187,7 +187,7 @@ export default function UsersPage() {
             )}
           </TableBody>
         </Table>
-      </TableContainer>
+      </TableContainerWrapper>
 
       <div ref={sentinelRef} style={{ height: 1 }} />
       {isLoadingMore && <LinearProgress sx={{ mt: 1 }} />}

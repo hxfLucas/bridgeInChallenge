@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
   IconButton, LinearProgress, Paper, Snackbar, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography,
+  TableCell, TableHead, TableRow, TextField, Tooltip, Typography,
 } from '@mui/material';
+import TableContainerWrapper from '../../../components/TableContainerWrapper';
 import { Delete as DeleteIcon, VpnKey as VpnKeyIcon, ContentCopy as ContentCopyIcon, Check as CheckIcon } from '@mui/icons-material';
 import { useMagicLinks } from '../../../hooks/modules/useMagicLinks';
 import { formatDate } from '../../../utils/formatDate';
@@ -69,7 +70,7 @@ export default function MagicLinksPage() {
       {isLoading && <LinearProgress sx={{ mb: 2 }} />}
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      <TableContainer component={Paper} variant="outlined">
+      <TableContainerWrapper component={Paper} variant="outlined">
         <Table>
           <TableHead>
             <TableRow>
@@ -157,7 +158,7 @@ export default function MagicLinksPage() {
             )}
           </TableBody>
         </Table>
-      </TableContainer>
+      </TableContainerWrapper>
 
       <div ref={sentinelRef} style={{ height: 1 }} />
       {isLoadingMore && <LinearProgress sx={{ mt: 1 }} />}

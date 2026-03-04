@@ -16,13 +16,13 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
   TableRow,
   Tooltip,
   Typography,
   Divider,
 } from '@mui/material';
+import TableContainerWrapper from '../../../components/TableContainerWrapper';
 import { Delete as DeleteIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import { useReports, STATUS_LABELS, STATUS_COLORS } from '../../../hooks/modules/useReports';
 import type { ReportStatus } from '../../../api/reports.api';
@@ -90,7 +90,7 @@ export default function ReportsPage() {
         </Alert>
       )}
 
-      <TableContainer component={Paper} variant="outlined">
+      <TableContainerWrapper component={Paper} variant="outlined">
         <Table>
           <TableHead>
             <TableRow>
@@ -166,7 +166,7 @@ export default function ReportsPage() {
             )}
           </TableBody>
         </Table>
-      </TableContainer>
+      </TableContainerWrapper>
 
       <div ref={sentinelRef} style={{ height: 1 }} />
       {isLoadingMore && <LinearProgress sx={{ mt: 1 }} />}
