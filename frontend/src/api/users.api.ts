@@ -11,6 +11,15 @@ export type User = {
 };
 export type AddUserPayload = { email: string; name: string };
 
+type ListUsersResponse = {
+  items: User[];
+};
+
+export async function listUsers(): Promise<User[]> {
+  const { data } = await api.get<ListUsersResponse>('/users/list');
+  return data.items ?? [];
+}
+
 export async function addUser(payload: AddUserPayload): Promise<User> {
   const { data } = await api.post<User>('/users/add-user', payload);
   return data;

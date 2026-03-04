@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -24,10 +24,14 @@ import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useUsers } from '../../../hooks/modules/useUsers';
 
 export default function UsersPage() {
-  const { users, isLoading, error, addUser, removeUser } = useUsers();
+  const { users, isLoading, error, fetchUsers, addUser, removeUser } = useUsers();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleOpenDialog = () => {
     setName('');
