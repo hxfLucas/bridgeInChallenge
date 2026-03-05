@@ -128,7 +128,7 @@ export default function UsersPage() {
       )}
 
       {/* Search Bar */}
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 2, maxWidth: 1056, width: '100%', mx: 'auto' }}>
         <TextField
           placeholder="Search by email..."
           value={searchValue}

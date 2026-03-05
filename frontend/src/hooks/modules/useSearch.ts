@@ -24,6 +24,7 @@ export function useSearch(
   const [isSearching, setIsSearching] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callbackRef = useRef(onDebouncedChange);
+  const isFirstRenderRef = useRef(true);
 
   // Update callback ref when callback changes
   useEffect(() => {
@@ -31,8 +32,9 @@ export function useSearch(
   }, [onDebouncedChange]);
 
   useEffect(() => {
-    // Skip effect if value is still at initial value (haven't actually changed)
-    if (searchValue === initialValue) {
+    // Skip effect on first render only
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
       return;
     }
 
@@ -56,7 +58,7 @@ export function useSearch(
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [searchValue, initialValue, delay]);
+  }, [searchValue, delay]);
 
   return {
     searchValue,

@@ -1,5 +1,5 @@
-#DEV or LIVE
-ENVIRONMENT=DEV
+#dev or production
+NODE_ENV=dev
 SHOW_UNHANDLED_ERRORS_IN_CONSOLE=false
 
 CORS_ALLOWED_ORIGINS=http://localhost:5173
