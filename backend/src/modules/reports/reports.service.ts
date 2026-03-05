@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { getAppDataSource } from '../../shared/database/data-source';
 import { getAuthenticatedUserData } from '../../shared/auth/authContext';
 import { MagicLink } from '../magiclinks/magiclinks.entity';

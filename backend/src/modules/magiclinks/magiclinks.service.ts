@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { getAppDataSource } from '../../shared/database/data-source'
 import { MagicLink } from './magiclinks.entity'
 import { generateMagicLinkData } from './magiclinks.utils'

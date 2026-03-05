@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { runWithAuthUser } from '../../shared/auth/authContext';
+import { isTokenInvalidated } from '../../shared/auth/tokenInvalidation';
 
 type AccessTokenPayload = JwtPayload & {
   sub: string;
@@ -24,6 +25,10 @@ export function jwtGuard(req: Request, res: Response, next: NextFunction): void 
 
   try {
     const payload = jwt.verify(accessToken, secret, { algorithms: ['HS256'] }) as AccessTokenPayload;
+    if (isTokenInvalidated(payload.sub, payload.iat ?? 0)) {
+      res.status(401).json({ message: 'token_invalidated' });
+      return;
+    }
     req.user = payload;
     runWithAuthUser({ id: payload.sub, role: payload.role, companyId: payload.companyId }, next);
   } catch {

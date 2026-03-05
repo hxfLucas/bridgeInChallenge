@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { isValidEmail } from '../../shared/utils/validateEmail';
 import { AddUserDto } from './users.dtos';
-import { createUserForCompany, deleteUserFromCompany, updateUserPassword as updateUserPasswordService, listUsers } from './users.service';
+import { createUserForCompany, deleteUserFromCompany, updateUserPassword as updateUserPasswordService, listUsers, updateOwnSettings } from './users.service';
 import { getAuthenticatedUserData } from '../../shared/auth/authContext';
 
 export async function addUser(req: Request<{}, {}, AddUserDto>, res: Response) {
@@ -48,4 +48,29 @@ export async function usersList(req: Request, res: Response) {
   const result = await listUsers({ companyId, offset, limit, search: search ? String(search) : undefined });
 
   return res.json(result);
+}
+
+export async function updateOwnSettingsHandler(req: Request, res: Response, next: Function) {
+  try {
+    const { action, currentPassword, newPassword } = req.body ?? {};
+    if (!action) return res.status(400).json({ error: 'Missing action' });
+
+    if (action === 'change_password') {
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: 'currentPassword and newPassword are required' });
+      }
+      if (String(newPassword).length < 6) {
+        return res.status(400).json({ error: 'New password must be at least 6 characters' });
+      }
+      await updateOwnSettings({ action, currentPassword: String(currentPassword), newPassword: String(newPassword) });
+    } else if (action === 'sign_out_all_devices') {
+      await updateOwnSettings({ action });
+    } else {
+      return res.status(400).json({ error: 'Unknown action' });
+    }
+
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
 }

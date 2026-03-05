@@ -10,7 +10,7 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import { Assessment as AssessmentIcon, People as PeopleIcon, VpnKey as VpnKeyIcon, Summarize as SummarizeIcon } from '@mui/icons-material';
+import { Assessment as AssessmentIcon, People as PeopleIcon, VpnKey as VpnKeyIcon, Summarize as SummarizeIcon, Dashboard as DashboardIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import { Badge, IconButton } from '@mui/material';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../contexts/AuthContext';
@@ -30,9 +30,11 @@ export default function ACPLayout() {
   console.log("Unread content: ", unread);
 
   const navItems = [
+    { label: 'Dashboard', path: '/acp/dashboard', icon: <DashboardIcon /> },
     { label: 'Reports', path: '/acp/reports', icon: <AssessmentIcon /> },
     { label: 'Users', path: '/acp/users', icon: <PeopleIcon /> },
     { label: 'Magic Links', path: '/acp/magiclinks', icon: <VpnKeyIcon /> },
+    { label: 'Settings', path: '/acp/settings', icon: <SettingsIcon /> },
   ];
 
   return (

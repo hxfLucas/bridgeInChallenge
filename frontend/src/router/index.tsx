@@ -7,6 +7,8 @@ import UsersPage from '../views/acp/users';
 import ReportsPage from '../views/acp/reports';
 import MagicLinksPage from '../views/acp/magiclinks';
 import ReportPage from '../views/report';
+import DashboardPage from '../views/acp/dashboard';
+import SettingsPage from '../views/acp/settings';
 
 const router = createBrowserRouter([
   {
@@ -47,6 +49,14 @@ const router = createBrowserRouter([
           {
             path: 'magiclinks',
             element: <MagicLinksPage />,
+          },
+          {
+            path: 'dashboard',
+            element: <DashboardPage />,
+          },
+          {
+            path: 'settings',
+            element: <SettingsPage />,
           },
         ],
       },

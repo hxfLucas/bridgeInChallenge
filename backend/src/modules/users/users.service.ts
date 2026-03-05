@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import  {getAppDataSource}  from '../../shared/database/data-source';
 import { User } from './users.entity';
 import { getAuthenticatedUserData } from '../../shared/auth/authContext';
+import { invalidateUser } from '../../shared/auth/tokenInvalidation';
 
 export type AdminContext = { id: string; role: string; companyId?: string };
 
@@ -129,4 +130,53 @@ export async function listUsers(params: {
     total,
     hasMore: params.offset + items.length < total,
   };
+}
+
+type UpdateOwnSettingsPayload =
+  | { action: 'change_password'; currentPassword: string; newPassword: string }
+  | { action: 'sign_out_all_devices' };
+
+export async function updateOwnSettings(payload: UpdateOwnSettingsPayload): Promise<void> {
+  const { id } = getAuthenticatedUserData();
+
+  if (payload.action === 'sign_out_all_devices') {
+    await invalidateUser(id);
+    return;
+  }
+
+  // change_password
+  const repo = getAppDataSource().getRepository(User);
+  const user = await repo.findOneBy({ id });
+  if (!user) {
+    const err: any = new Error('User not found');
+    err.code = 'NOT_FOUND';
+    err.status = 404;
+    throw err;
+  }
+
+  const [salt, storedKey] = user.passwordHash.split(':');
+  const isValid = await new Promise<boolean>((resolve, reject) => {
+    crypto.scrypt(payload.currentPassword, salt, 64, (error, derivedKey) => {
+      if (error) return reject(error);
+      resolve(derivedKey.toString('hex') === storedKey);
+    });
+  });
+
+  if (!isValid) {
+    const err: any = new Error('Current password is incorrect');
+    err.code = 'WRONG_PASSWORD';
+    err.status = 400;
+    throw err;
+  }
+
+  const newSalt = crypto.randomBytes(16).toString('hex');
+  const newPasswordHash = await new Promise<string>((resolve, reject) => {
+    crypto.scrypt(payload.newPassword, newSalt, 64, (error, derivedKey) => {
+      if (error) return reject(error);
+      resolve(`${newSalt}:${derivedKey.toString('hex')}`);
+    });
+  });
+
+  user.passwordHash = newPasswordHash;
+  await repo.save(user);
 }
