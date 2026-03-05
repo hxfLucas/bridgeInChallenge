@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { signIn as apiSignIn, signUp as apiSignUp, checkSession } from '../../api/auth.api';
 import type { SignInPayload, SignUpPayload } from '../../api/auth.api';
 import { setRefreshToken } from '../../api/axios';
+import { extractErrorMessage } from '../../utils/extractErrorMessage';
 import { useAuthContext } from '../../contexts/AuthContext';
 
 interface AuthActionState {
@@ -25,8 +26,7 @@ export function useAuth() {
       updateSession(session);
       navigate('/acp');
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Sign in failed';
-      setSignInState({ isLoading: false, error: message });
+      setSignInState({ isLoading: false, error: extractErrorMessage(err, 'Sign in failed') });
     }
   }, [navigate, updateSession]);
 
@@ -39,8 +39,7 @@ export function useAuth() {
       updateSession(session);
       navigate('/acp');
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Sign up failed';
-      setSignUpState({ isLoading: false, error: message });
+      setSignUpState({ isLoading: false, error: extractErrorMessage(err, 'Sign up failed') });
     }
   }, [navigate, updateSession]);
 

@@ -5,6 +5,7 @@ import {
   deleteMagicLink as apiDeleteMagicLink,
 } from '../../api/magiclinks.api';
 import type { MagicLink } from '../../api/magiclinks.api';
+import { extractErrorMessage } from '../../utils/extractErrorMessage';
 
 const LIMIT = 25;
 
@@ -62,7 +63,7 @@ export function useMagicLinks() {
         setState({ magicLinks: res.data, total: res.total, hasMore: res.hasMore, isLoading: false, isLoadingMore: false, error: null });
       }
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to fetch magic links';
+      const message = extractErrorMessage(err, 'Failed to fetch magic links');
       if (isMountedRef.current) {
         setState((prev) => ({ ...prev, isLoading: false, error: message }));
       }
@@ -89,7 +90,7 @@ export function useMagicLinks() {
         }));
       }
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to load more';
+      const message = extractErrorMessage(err, 'Failed to load more');
       if (isMountedRef.current) {
         setState((prev) => ({ ...prev, isLoadingMore: false, error: message }));
       }
@@ -108,7 +109,7 @@ export function useMagicLinks() {
       }
       return created;
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to create magic link';
+      const message = extractErrorMessage(err, 'Failed to create magic link');
       if (isMountedRef.current) {
         setGenerateLinkState({ isLoading: false, error: message });
       }
@@ -128,7 +129,7 @@ export function useMagicLinks() {
         setRemoveLinkState({ isLoading: false, error: null });
       }
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to delete magic link';
+      const message = extractErrorMessage(err, 'Failed to delete magic link');
       if (isMountedRef.current) {
         setRemoveLinkState({ isLoading: false, error: message });
       }

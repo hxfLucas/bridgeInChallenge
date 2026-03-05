@@ -109,7 +109,7 @@ export default function SignInPage() {
       </Paper>
 
       <Typography variant="body2" mt={3}>
-        Don'&apos;'t have an account?{' '}
+        Don&apos;t have an account?{' '}
         <MuiLink component={RouterLink} to="/sign-up">
           Sign up
         </MuiLink>

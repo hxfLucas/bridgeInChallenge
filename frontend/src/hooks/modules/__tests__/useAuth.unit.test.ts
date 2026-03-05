@@ -77,6 +77,19 @@ describe('useAuth', () => {
     expect(result.current.signInState.error).toBe('Invalid credentials');
   });
 
+  it('signIn: response.data.message takes priority over response.data.error', async () => {
+    const err: any = new Error('original');
+    err.response = { data: { message: 'Message wins', error: 'Error loses' } };
+    vi.mocked(apiSignIn).mockRejectedValue(err);
+
+    const { result } = renderHook(() => useAuth());
+    await act(async () => {
+      await result.current.signIn({ email: 'a@a.com', password: 'wrong' });
+    });
+
+    expect(result.current.signInState.error).toBe('Message wins');
+  });
+
   it('signIn fallback: uses err.message when no response.data.error', async () => {
     const err: any = new Error('Network down');
     vi.mocked(apiSignIn).mockRejectedValue(err);
@@ -131,6 +144,19 @@ describe('useAuth', () => {
     });
 
     expect(result.current.signUpState.error).toBe('Email already in use');
+  });
+
+  it('signUp: response.data.message takes priority over response.data.error', async () => {
+    const err: any = new Error('Email taken');
+    err.response = { data: { message: 'Message wins', error: 'Error loses' } };
+    vi.mocked(apiSignUp).mockRejectedValue(err);
+
+    const { result } = renderHook(() => useAuth());
+    await act(async () => {
+      await result.current.signUp({ email: 'b@b.com', password: 'pass', company: 'Acme' });
+    });
+
+    expect(result.current.signUpState.error).toBe('Message wins');
   });
 
   it('signOut calls contextSignOut and navigate("/sign-in")', () => {

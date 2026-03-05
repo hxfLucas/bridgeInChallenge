@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchDashboardStats, type DashboardStats } from '../../api/dashboard.api';
+import { extractErrorMessage } from '../../utils/extractErrorMessage';
 
 interface UseDashboardResult {
   stats: DashboardStats | null;
@@ -25,7 +26,7 @@ export function useDashboard(): UseDashboardResult {
         }
       } catch (err: any) {
         if (!cancelled) {
-          setError(err?.response?.data?.error ?? err?.message ?? 'An error occurred');
+          setError(extractErrorMessage(err, 'An error occurred'));
         }
       } finally {
         if (!cancelled) {

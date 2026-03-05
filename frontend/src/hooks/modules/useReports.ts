@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { getReports, deleteReport, updateReportStatus } from '../../api/reports.api';
 import { refreshInternal as refreshNotifications } from './useNotifications';
+import { extractErrorMessage } from '../../utils/extractErrorMessage';
 import type { Report, ReportStatus } from '../../api/reports.api';
 
 const LIMIT = 25;
@@ -54,7 +55,7 @@ export function useReports() {
       hasMoreRef.current = res.hasMore;
       setState({ reports: res.data, total: res.total, hasMore: res.hasMore, isLoading: false, isLoadingMore: false, error: null });
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to load reports';
+      const message = extractErrorMessage(err, 'Failed to load reports');
       setState((prev) => ({ ...prev, isLoading: false, error: message }));
     }
   }, []);
@@ -75,7 +76,7 @@ export function useReports() {
         isLoadingMore: false,
       }));
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to load more';
+      const message = extractErrorMessage(err, 'Failed to load more');
       setState((prev) => ({ ...prev, isLoadingMore: false, error: message }));
     } finally {
       isLoadingMoreRef.current = false;
@@ -98,7 +99,7 @@ export function useReports() {
         // swallow any refresh errors
       }
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to delete report';
+      const message = extractErrorMessage(err, 'Failed to delete report');
       setRemoveReportState({ isLoading: false, error: message });
     }
   }, []);
@@ -119,7 +120,7 @@ export function useReports() {
         // ignore
       }
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to update status';
+      const message = extractErrorMessage(err, 'Failed to update status');
       setChangeStatusState({ isLoading: false, error: message });
     }
   }, []);

@@ -11,6 +11,7 @@ import {
   Paper,
 } from '@mui/material';
 import { validateReport, submitReport } from '../../api/reports.api';
+import { extractErrorMessage } from '../../utils/extractErrorMessage';
 
 type PageState = 'loading' | 'invalid' | 'form' | 'submitted' | 'rate-limited';
 
@@ -50,9 +51,7 @@ export default function ReportPage() {
       if (err?.response?.status === 429) {
         setPageState('rate-limited');
       } else {
-        const message =
-          err?.response?.data?.error ?? err?.message ?? 'Failed to submit report. Please try again.';
-        setSubmitError(message);
+        setSubmitError(extractErrorMessage(err, 'Failed to submit report. Please try again.'));
       }
     } finally {
       setIsSubmitting(false);

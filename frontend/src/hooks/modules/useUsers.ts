@@ -6,6 +6,7 @@ import {
   updateUserPassword as apiUpdateUserPassword,
 } from '../../api/users.api';
 import type { User, AddUserPayload } from '../../api/users.api';
+import { extractErrorMessage } from '../../utils/extractErrorMessage';
 
 const LIMIT = 25;
 
@@ -62,7 +63,7 @@ export function useUsers() {
         setState({ users: res.data, total: res.total, hasMore: res.hasMore, isLoading: false, isLoadingMore: false, error: null, searchQuery: searchQueryRef.current });
       }
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to fetch users';
+      const message = extractErrorMessage(err, 'Failed to fetch users');
       if (isMountedRef.current) {
         setState((prev) => ({ ...prev, isLoading: false, error: message }));
       }
@@ -93,7 +94,7 @@ export function useUsers() {
         }));
       }
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to load more';
+      const message = extractErrorMessage(err, 'Failed to load more');
       if (isMountedRef.current) {
         setState((prev) => ({ ...prev, isLoadingMore: false, error: message }));
       }
@@ -112,7 +113,7 @@ export function useUsers() {
       }
       return created;
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to add user';
+      const message = extractErrorMessage(err, 'Failed to add user');
       if (isMountedRef.current) {
         setAddUserState({ isLoading: false, error: message });
       }
@@ -132,7 +133,7 @@ export function useUsers() {
         setRemoveUserState({ isLoading: false, error: null });
       }
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to remove user';
+      const message = extractErrorMessage(err, 'Failed to remove user');
       if (isMountedRef.current) {
         setRemoveUserState({ isLoading: false, error: message });
       }
@@ -148,7 +149,7 @@ export function useUsers() {
         setUpdatePasswordState({ isLoading: false, error: null });
       }
     } catch (err: any) {
-      const message = err?.response?.data?.error ?? err?.message ?? 'Failed to update password';
+      const message = extractErrorMessage(err, 'Failed to update password');
       if (isMountedRef.current) {
         setUpdatePasswordState({ isLoading: false, error: message });
       }

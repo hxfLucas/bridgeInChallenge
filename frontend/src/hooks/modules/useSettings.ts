@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { changeOwnPassword as changeOwnPasswordApi, signOutAllDevices as signOutAllDevicesApi } from '../../api/users.api';
 import { useAuth } from './useAuth';
+import { extractErrorMessage } from '../../utils/extractErrorMessage';
 
 interface ActionState {
   isLoading: boolean;
@@ -23,7 +24,7 @@ export function useSettings() {
     } catch (err: any) {
       setChangePasswordState({
         isLoading: false,
-        error: err?.response?.data?.error ?? err?.message ?? 'An error occurred',
+        error: extractErrorMessage(err, 'An error occurred'),
       });
     }
   }
@@ -37,7 +38,7 @@ export function useSettings() {
     } catch (err: any) {
       setSignOutAllDevicesState({
         isLoading: false,
-        error: err?.response?.data?.error ?? err?.message ?? 'An error occurred',
+        error: extractErrorMessage(err, 'An error occurred'),
       });
     }
   }
