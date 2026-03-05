@@ -25,7 +25,9 @@ export async function createApp(dataSource?: any){
         }
 
         const ds = dataSource ?? getAppDataSource();
-        await ds.initialize().catch((err:any) => console.error('DataSource init error', err));
+        if (!ds.isInitialized) {
+          await ds.initialize().catch((err:any) => console.error('DataSource init error', err));
+        }
 
         app.use('/auth', authRouter);
         app.use('/users', usersRouter);
