@@ -29,22 +29,22 @@ beforeAll(async () => {
   const companyRepo = ds.getRepository(Company);
   const reportRepo = ds.getRepository(Report);
 
-  const companyA = await companyRepo.save(companyRepo.create({ id: randomUUID(), name: 'Company A' }));
-  const companyB = await companyRepo.save(companyRepo.create({ id: randomUUID(), name: 'Company B' }));
+  const companyA = await companyRepo.save(companyRepo.create({ name: 'Company A' }));
+  const companyB = await companyRepo.save(companyRepo.create({ name: 'Company B' }));
   companyAId = companyA.id;
   companyBId = companyB.id;
 
   // Company A: 2 'new', 1 'in_review', 1 'resolved'
   await reportRepo.save([
-    reportRepo.create({ id: randomUUID(), companyId: companyAId, title: 'Report 1', description: 'desc', status: 'new' }),
-    reportRepo.create({ id: randomUUID(), companyId: companyAId, title: 'Report 2', description: 'desc', status: 'new' }),
-    reportRepo.create({ id: randomUUID(), companyId: companyAId, title: 'Report 3', description: 'desc', status: 'in_review' }),
-    reportRepo.create({ id: randomUUID(), companyId: companyAId, title: 'Report 4', description: 'desc', status: 'resolved' }),
+    reportRepo.create({ companyId: companyAId, title: 'Report 1', description: 'desc', status: 'new' }),
+    reportRepo.create({ companyId: companyAId, title: 'Report 2', description: 'desc', status: 'new' }),
+    reportRepo.create({ companyId: companyAId, title: 'Report 3', description: 'desc', status: 'in_review' }),
+    reportRepo.create({ companyId: companyAId, title: 'Report 4', description: 'desc', status: 'resolved' }),
   ]);
 
   // Company B: 1 'new' (isolation check)
   await reportRepo.save(
-    reportRepo.create({ id: randomUUID(), companyId: companyBId, title: 'Report B1', description: 'desc', status: 'new' }),
+    reportRepo.create({ companyId: companyBId, title: 'Report B1', description: 'desc', status: 'new' }),
   );
 });
 

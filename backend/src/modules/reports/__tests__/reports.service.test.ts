@@ -34,14 +34,13 @@ beforeAll(async () => {
 
   // Seed company
   const companyRepo = ds.getRepository(Company);
-  const company = companyRepo.create({ id: randomUUID(), name: 'Acme Corp' });
+  const company = companyRepo.create({ name: 'Acme Corp' });
   const savedCompany = await companyRepo.save(company);
   companyId = savedCompany.id;
 
   // Seed user (admin)
   const userRepo = ds.getRepository(User);
   const user = userRepo.create({
-    id: randomUUID(),
     companyId,
     email: 'admin@acme.com',
     passwordHash: 'salt:hash',
@@ -53,7 +52,6 @@ beforeAll(async () => {
   // Seed magic link with known reportingToken
   const mlRepo = ds.getRepository(MagicLink);
   const magicLink = mlRepo.create({
-    id: randomUUID(),
     reportingToken: REPORTING_TOKEN,
     companyId,
     alias: null,
@@ -150,7 +148,6 @@ describe('listReports', () => {
     const promises = Array.from({ length: 3 }, (_, i) =>
       reportRepo.save(
         reportRepo.create({
-          id: randomUUID(),
           companyId,
           title: `List test report ${i + 1}`,
           description: `Description ${i + 1}`,
@@ -201,7 +198,6 @@ describe('deleteReport', () => {
     const reportRepo = ds.getRepository(Report);
     const report = await reportRepo.save(
       reportRepo.create({
-        id: randomUUID(),
         companyId,
         title: 'To be deleted',
         description: 'Goodbye',
@@ -227,7 +223,6 @@ describe('deleteReport', () => {
     const reportRepo = ds.getRepository(Report);
     const report = await reportRepo.save(
       reportRepo.create({
-        id: randomUUID(),
         companyId,
         title: 'Cross-company',
         description: 'Should not be deletable by another company',
@@ -238,13 +233,12 @@ describe('deleteReport', () => {
     // Create a second company and act as that company's admin
     const otherCompanyRepo = ds.getRepository(Company);
     const otherCompany = await otherCompanyRepo.save(
-      otherCompanyRepo.create({ id: randomUUID(), name: 'Other Corp' })
+      otherCompanyRepo.create({ name: 'Other Corp' })
     );
 
     const otherUserRepo = ds.getRepository(User);
     const otherUser = await otherUserRepo.save(
       otherUserRepo.create({
-        id: randomUUID(),
         companyId: otherCompany.id,
         email: 'admin@other.com',
         passwordHash: 'salt:hash',
@@ -271,7 +265,6 @@ describe('updateReportStatus', () => {
     const reportRepo = ds.getRepository(Report);
     const r = await reportRepo.save(
       reportRepo.create({
-        id: randomUUID(),
         companyId,
         title: 'Status update test',
         description: 'Will have its status changed',

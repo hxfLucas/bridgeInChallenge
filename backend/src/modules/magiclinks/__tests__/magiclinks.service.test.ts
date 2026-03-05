@@ -25,16 +25,15 @@ beforeAll(async () => {
   const companyRepo = ds.getRepository(Company)
   const userRepo = ds.getRepository(User)
 
-  const company1 = companyRepo.create({ id: randomUUID(), name: 'Company One' })
+  const company1 = companyRepo.create({ name: 'Company One' })
   await companyRepo.save(company1)
   company1Id = company1.id
 
-  const company2 = companyRepo.create({ id: randomUUID(), name: 'Company Two' })
+  const company2 = companyRepo.create({name: 'Company Two' })
   await companyRepo.save(company2)
   company2Id = company2.id
 
   const adminUser1 = userRepo.create({
-    id: randomUUID(),
     companyId: company1Id,
     email: 'admin1@example.com',
     passwordHash: 'hash',
@@ -44,7 +43,6 @@ beforeAll(async () => {
   adminUser1Id = adminUser1.id
 
   const managerUser1 = userRepo.create({
-    id: randomUUID(),
     companyId: company1Id,
     email: 'manager1@example.com',
     passwordHash: 'hash',
@@ -54,7 +52,6 @@ beforeAll(async () => {
   managerUser1Id = managerUser1.id
 
   const adminUser2 = userRepo.create({
-    id: randomUUID(),
     companyId: company2Id,
     email: 'admin2@example.com',
     passwordHash: 'hash',
@@ -133,13 +130,12 @@ describe('listByCompany', () => {
   it('returns correct total and hasMore with pagination', async () => {
     // Reset by using a fresh company for isolation
     const companyRepo = ds.getRepository(Company)
-    const paginationCompany = companyRepo.create({ id: randomUUID(), name: 'Pagination Company' })
+    const paginationCompany = companyRepo.create({ name: 'Pagination Company' })
     await companyRepo.save(paginationCompany)
     const pagCompanyId = paginationCompany.id
 
     const userRepo = ds.getRepository(User)
     const pagUser = userRepo.create({
-      id: randomUUID(),
       companyId: pagCompanyId,
       email: 'paguser@example.com',
       passwordHash: 'hash',
