@@ -528,7 +528,7 @@ TypeORM migrations are the source of truth for the database schema.
 ```bash
 # Generate a new migration after modifying entities
 cd backend
-npx typeorm-ts-node-commonjs migration:generate -d src/shared/database/data-source.ts src/migrations/<MigrationName>
+npx typeorm-ts-node-commonjs migration:generate -d src/shared/database/data-source.ts src/migrations/<MigrationName (leave empty for an automatic naming convention timestamp based)>
 
 # Run pending migrations
 npx typeorm-ts-node-commonjs migration:run -d src/shared/database/data-source.ts
