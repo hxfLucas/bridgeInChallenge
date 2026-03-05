@@ -296,4 +296,119 @@ describe('listUsers', () => {
     const ids2 = page2.data.map((u) => u.id);
     expect(ids1.some((id) => ids2.includes(id))).toBe(false);
   });
+
+  describe('search parameter', () => {
+    it('filters results by partial email match', async () => {
+      const result = await listUsers({
+        companyId: listCompanyId,
+        offset: 0,
+        limit: 10,
+        search: 'list-user-1',
+      });
+
+      expect(result.total).toBe(1);
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].email).toBe('list-user-1@test.com');
+    });
+
+    it('returns empty data when search term matches no users', async () => {
+      const result = await listUsers({
+        companyId: listCompanyId,
+        offset: 0,
+        limit: 10,
+        search: 'nonexistent-user',
+      });
+
+      expect(result.total).toBe(0);
+      expect(result.data).toHaveLength(0);
+      expect(result.hasMore).toBe(false);
+    });
+
+    it('matches partial strings within email (LIKE search)', async () => {
+      const result = await listUsers({
+        companyId: listCompanyId,
+        offset: 0,
+        limit: 10,
+        search: '@test.com',
+      });
+
+      expect(result.total).toBe(3);
+      expect(result.data).toHaveLength(3);
+    });
+
+    it('search respects pagination — applies limit and offset to filtered results', async () => {
+      // Create additional users with searchable prefix
+      const userRepo = ds.getRepository(User);
+      for (let i = 4; i <= 6; i++) {
+        await userRepo.save(
+          userRepo.create({
+            id: crypto.randomUUID(),
+            companyId: listCompanyId,
+            email: `search-test-${i}@example.com`,
+            passwordHash: 'salthex:keyhex',
+            role: 'manager',
+          } as Partial<User>),
+        );
+      }
+
+      // Fetch first page of search-test users (limit 2)
+      const page1 = await listUsers({
+        companyId: listCompanyId,
+        offset: 0,
+        limit: 2,
+        search: 'search-test',
+      });
+
+      expect(page1.total).toBe(3);
+      expect(page1.data).toHaveLength(2);
+      expect(page1.hasMore).toBe(true);
+
+      // Fetch second page
+      const page2 = await listUsers({
+        companyId: listCompanyId,
+        offset: 2,
+        limit: 2,
+        search: 'search-test',
+      });
+
+      expect(page2.total).toBe(3);
+      expect(page2.data).toHaveLength(1);
+      expect(page2.hasMore).toBe(false);
+
+      // Verify no overlapping ids between pages
+      const ids1 = page1.data.map((u) => u.id);
+      const ids2 = page2.data.map((u) => u.id);
+      expect(ids1.some((id) => ids2.includes(id))).toBe(false);
+    });
+
+    it('search is isolated per company — does not return users from other companies with matching emails', async () => {
+      // Create a second company with a user that has a searchable string
+      const otherCompanyRepo = ds.getRepository(Company);
+      const otherCompany = await otherCompanyRepo.save(
+        otherCompanyRepo.create({ id: crypto.randomUUID(), name: 'Search Test Corp' } as Partial<Company>),
+      );
+
+      const otherUserRepo = ds.getRepository(User);
+      await otherUserRepo.save(
+        otherUserRepo.create({
+          id: crypto.randomUUID(),
+          companyId: otherCompany.id,
+          email: 'search-match@example.com',
+          passwordHash: 'salthex:keyhex',
+          role: 'manager',
+        } as Partial<User>),
+      );
+
+      // Search in listCompanyId should not find the user from otherCompany
+      const result = await listUsers({
+        companyId: listCompanyId,
+        offset: 0,
+        limit: 10,
+        search: 'search-match',
+      });
+
+      expect(result.total).toBe(0);
+      expect(result.data).toHaveLength(0);
+    });
+  });
 });

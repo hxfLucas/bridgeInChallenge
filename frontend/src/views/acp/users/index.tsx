@@ -9,6 +9,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  InputAdornment,
   LinearProgress,
   Paper,
   Table,
@@ -21,13 +22,14 @@ import {
   Typography,
 } from '@mui/material';
 import TableContainerWrapper from '../../../components/TableContainerWrapper';
-import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
+import { Add as AddIcon, Close as CloseIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import { useUsers } from '../../../hooks/modules/useUsers';
+import { useSearch } from '../../../hooks/modules/useSearch';
 import { formatDate } from '../../../utils/formatDate';
 import { useAuthContext } from '../../../contexts/AuthContext';
 
 export default function UsersPage() {
-  const { users, isLoading, isLoadingMore, error, fetchInitial, loadMore, addUser, removeUser, updateUserPassword } = useUsers();
+  const { users, isLoading, isLoadingMore, error, fetchInitial, loadMore, addUser, removeUser, updateUserPassword, fetchUsers } = useUsers();
   const { user: currentUser } = useAuthContext();
   const isManager = currentUser?.role === 'manager';
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -39,6 +41,11 @@ export default function UsersPage() {
   const [editPassword, setEditPassword] = useState('');
 
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Search hook with 250ms debounce delay
+  const { searchValue, setSearchValue } = useSearch('', 250, (query) => {
+    fetchUsers(query);
+  });
 
   useEffect(() => {
     fetchInitial();
@@ -92,6 +99,11 @@ export default function UsersPage() {
     setEditDialogOpen(false);
   };
 
+  const handleClearSearch = () => {
+    setSearchValue('');
+    fetchUsers('');
+  };
+
   return (
     <Box>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
@@ -114,6 +126,31 @@ export default function UsersPage() {
           {error}
         </Alert>
       )}
+
+      {/* Search Bar */}
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          placeholder="Search by email..."
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          fullWidth
+          size="small"
+          InputProps={{
+            endAdornment: searchValue.length > 0 && (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  onClick={handleClearSearch}
+                  edge="end"
+                  aria-label="clear search"
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
 
       <TableContainerWrapper component={Paper} variant="outlined">
         <Table>

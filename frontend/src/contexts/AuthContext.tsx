@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user || !expiresAt) return;
 
-    const TEN_MINUTES_MS = 10 * 60 * 1000;
+    const TEN_MINUTES_MS = parseInt(import.meta.env.VITE_PROACTIVE_REFRESH_TOKENS_BEFORE_EXPIRATION_MINUTES || 10) * 60 * 1000;
     const delay = expiresAt * 1000 - Date.now() - TEN_MINUTES_MS;
 
     if (delay <= 0) {

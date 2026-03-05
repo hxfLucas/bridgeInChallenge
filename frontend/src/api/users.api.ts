@@ -12,9 +12,9 @@ export type User = {
 export type AddUserPayload = { email: string; name: string; password: string };
 export type PaginatedResponse<T> = { data: T[]; total: number; hasMore: boolean; };
 
-export async function listUsers(offset = 0, limit = 25): Promise<PaginatedResponse<User>> {
+export async function listUsers(offset = 0, limit = 25, search?: string): Promise<PaginatedResponse<User>> {
   const { data } = await api.get<PaginatedResponse<User>>('/users/list', {
-    params: { offset, limit },
+    params: { offset, limit, ...(search && { search }) },
   });
   return data;
 }

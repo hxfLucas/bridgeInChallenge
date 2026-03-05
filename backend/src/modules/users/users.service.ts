@@ -117,7 +117,7 @@ export async function listUsers(params: {
   const qb = repo.createQueryBuilder('user').where('user.companyId = :companyId', { companyId: params.companyId });
 
   if (params.search) {
-    qb.andWhere('user.searchable LIKE :search', { search: `%${params.search}%` });
+    qb.andWhere('user.email LIKE :search', { search: `%${params.search}%` });
   }
 
   qb.orderBy('user.createdAt', 'DESC').addOrderBy('user.id', 'DESC');
