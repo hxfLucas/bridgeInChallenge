@@ -131,6 +131,17 @@ graph TB
 - Status changes trigger background jobs for notifications
 - Managers notified via email when new reports arrive
 
+- Report created with reference to the MagicLink and company
+- New report submissions enqueue background jobs for email notifications to managers.
+- Report status changes update the notifications UI (navbar) but do not enqueue background jobs.
+- Managers notified via email when new reports arrive
+
+**Code pointers**
+- **Background job (enqueue on submission):** [backend/src/modules/reports/reports.service.ts](backend/src/modules/reports/reports.service.ts#L29-L66) — `submitReport()` calls `enqueueReportNotification(companyId, saved.id)` after saving a new report.
+- **Status changes (no job enqueue):** [backend/src/modules/reports/reports.service.ts](backend/src/modules/reports/reports.service.ts#L105-L135) — `updateReportStatus()` writes a `ReportStatusHistory` entry and updates the `Report` status in the DB; it does not call the notification queue.
+- **Notification queue & worker:** [backend/src/modules/notifications/notifications.service.ts](backend/src/modules/notifications/notifications.service.ts#L1-L20) and [backend/src/modules/notifications/notifications.worker.ts](backend/src/modules/notifications/notifications.worker.ts#L1-L40) — `enqueueReportNotification()` adds a `report-submitted` job to the `notificationEvents` queue which the worker processes to send emails.
+- **Navbar / notifications UI:** [frontend/src/hooks/modules/useNotifications.ts](frontend/src/hooks/modules/useNotifications.ts#L1-L40) and [frontend/src/views/acp/index.tsx](frontend/src/views/acp/index.tsx#L36-L42) — the hook polls `getNotifications()` and exposes `unread`, which the ACP layout Badge consumes to display the new-report count in the navbar.
+
 **3. Background Job Processing**
 - BullMQ + Redis handle async tasks (email notifications, report status updates, etc.)
 - Decouples long-running operations from HTTP requests
@@ -214,7 +225,7 @@ The authentication system uses a **dual-token strategy** with an additional bind
 2. When a client requests a token refresh, the server requires **both** the refresh token (from the request body) **and** the access token (from the HTTP-only cookie).
 3. The server verifies that `md5(access_token_cookie) === refresh_token.atHash`.
 
-(md5 to avoid consuming too much memory on each request otherwise could have used sha256)
+Used MD5 to hash to minimize memory and bandwidth usage on each request; otherwise SHA-256 could have been used since the hash is only a parameter within the refresh_token
 
 **Why this matters:** Even if an attacker exploits an XSS vulnerability and obtains the refresh token (stored in localStorage), they **cannot hijack the session** because they lack the access token — which is stored in an HTTP-only cookie and is inaccessible to JavaScript (on modern browsers and Chromium-based variants). The refresh endpoint will reject any request where the access token hash doesn't match.
 
