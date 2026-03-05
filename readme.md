@@ -7,7 +7,7 @@
 ## AI-Assisted Development Workflow
 
 This project was built leveraging an **AI agent workflow** with specialized roles:
-
+(included in the project)
 | Agent | Role |
 |---|---|
 | **Orchestrator** | Breaks down complex requests into tasks, coordinates parallel execution, and manages dependencies between phases |
@@ -38,6 +38,103 @@ It references both **"a unique" link** (singular) and **"magic links"** (plural)
 | **Queue** | BullMQ + Redis (background job processing) |
 | **Auth** | JWT (access + refresh tokens), HTTP-only cookies |
 | **Testing** | Jest + pg-mem + Supertest (backend), Vitest + Testing Library (frontend) |
+
+---
+
+## High-Level System Diagram
+
+```mermaid
+graph TB
+    subgraph "Frontend (React + Vite)"
+        UI["🖥️ React Components<br/>& Pages"]
+        Router["React Router<br/>& PrivateRoute"]
+        AuthContext["Auth Context<br/>(Session State)"]
+        Hooks["Custom Hooks<br/>(Feature Logic)"]
+    end
+
+    subgraph "Network"
+        API["REST API<br/>(Axios + JWT)"]
+        MagicLink["Magic Link<br/>(reportingToken)"]
+    end
+
+    subgraph "Backend (Express + TypeScript)"
+        Auth["🔐 Auth Module<br/>(Login/Signup/Refresh)"]
+        Users["👥 Users Module<br/>(CRUD + Roles)"]
+        Companies["🏢 Companies Module<br/>(Tenant Mgmt)"]
+        MagicLinks["✨ Magic Links Module<br/>(Token Generation)"]
+        Reports["📋 Reports Module<br/>(CRUD + Status)"]
+        Dashboard["📊 Dashboard Module<br/>(Analytics)"]
+        Notifications["🔔 Notifications Module<br/>(Real-time)"]
+        Queue["⚙️ Job Queue<br/>(BullMQ)"]
+    end
+
+    subgraph "Data Layer"
+        DB["🗄️ PostgreSQL<br/>(Companies, Users,<br/>MagicLinks, Reports)"]
+        Redis["⚡ Redis<br/>(Job Queue + Cache)"]
+    end
+
+    subgraph "External"
+        Email["📧 Email Service<br/>(Email Notifications)"]
+    end
+
+    %% Frontend flows
+    UI -->|Renders| Router
+    Router -->|Routes| UI
+    Router -->|Auth Guard| AuthContext
+    Hooks -->|State Logic| AuthContext
+    UI -->|Updates State| Hooks
+
+    %% Frontend to Backend
+    UI -->|REST API Calls| API
+    API -->|HTTP + JWT<br/>in httpOnly Cookie| Auth & Users & Companies & MagicLinks & Reports & Dashboard & Notifications
+
+    %% Magic Link flow (public)
+    MagicLink -->|Anonymous Report<br/>Submission| Reports
+
+    %% Backend internal flows
+    Auth -->|Creates Sessions| AuthContext
+    Users -->|Scoped by<br/>companyId| Companies
+    MagicLinks -->|Exposes<br/>reportingToken| Reports
+    Reports -->|Status<br/>Updates| Queue
+    Queue -->|Background<br/>Jobs| Email
+    Notifications -->|Polls Updates| API
+
+    %% Backend to Data Layer
+    Auth & Users & Companies & MagicLinks & Reports & Dashboard & Notifications -->|Queries & Mutations| DB
+    Queue -->|Stores Jobs| Redis
+    Dashboard -->|Reads Metrics| DB
+
+    %% Styling
+    classDef frontend fill:#4A90E2,stroke:#2E5C8A,color:#fff
+    classDef backend fill:#7ED321,stroke:#5A9E1F,color:#fff
+    classDef data fill:#F5A623,stroke:#C07E1B,color:#fff
+    classDef external fill:#BD10E0,stroke:#8B0AA8,color:#fff
+    
+    class UI,Router,AuthContext,Hooks frontend
+    class Auth,Users,Companies,MagicLinks,Reports,Dashboard,Notifications,Queue backend
+    class DB,Redis data
+    class Email external
+```
+
+### Key Data Flows
+
+**1. Authenticated User Flow (Admin/Manager)**
+- User signs in via `/auth/sign-in` → JWT tokens issued (access in httpOnly cookie, refresh in localStorage)
+- Access subsequent endpoints authenticated via JWT
+- Dashboard, Reports, Users, and Magic Links modules all scoped by `companyId` for tenant isolation
+- Refresh tokens automatically renewed before expiry
+
+**2. Anonymous Report Submission Flow**
+- External user receives magic link with embedded `reportingToken` (no authentication required)
+- User submits report via public `/reports/submit` endpoint
+- Report created with reference to the MagicLink and company
+- Status changes trigger background jobs for notifications
+- Managers notified via email when new reports arrive
+
+**3. Background Job Processing**
+- BullMQ + Redis handle async tasks (email notifications, report status updates, etc.)
+- Decouples long-running operations from HTTP requests
+- Ensures reliable job processing and retry logic
 
 ---
 
@@ -103,7 +200,7 @@ frontend/src/
 
 ## Security Implementation
 
-Security was a key consideration throughout this project. Below are the measures implemented:
+Security was a key consideration throughout this project as required in the challenge PDF. Below are the measures implemented:
 
 ### 1. Hardened JWT Authentication (Beyond Typical Implementation)
 
