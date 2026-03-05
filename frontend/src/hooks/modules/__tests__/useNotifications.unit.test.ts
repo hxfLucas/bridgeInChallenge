@@ -1,6 +1,6 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { vi } from 'vitest';
-import { useNotifications } from '../useNotifications';
+import { useNotifications, refreshInternal } from '../useNotifications';
 import { getNotifications } from '../../../api/auth.api';
 
 vi.mock('../../../api/auth.api', () => ({
@@ -143,5 +143,57 @@ describe('useNotifications', () => {
     });
 
     expect(mockGetNotifications).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('refreshInternal', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    mockGetNotifications.mockResolvedValue({ reportNotificationsData: { totalNew: 0 } });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.clearAllMocks();
+  });
+
+  it('is a no-op when no hook is mounted — does not throw and does not call getNotifications', () => {
+    // Render and immediately unmount to clear the internal ref
+    const { unmount } = renderHook(() => useNotifications(0));
+    unmount();
+    vi.clearAllMocks();
+
+    expect(() => refreshInternal()).not.toThrow();
+    expect(mockGetNotifications).not.toHaveBeenCalled();
+  });
+
+  it('triggers a fetch when the hook is mounted', async () => {
+    renderHook(() => useNotifications(0));
+    // Wait for the initial mount fetch to complete
+    await waitFor(() => expect(mockGetNotifications).toHaveBeenCalledTimes(1));
+
+    act(() => {
+      refreshInternal();
+    });
+
+    await waitFor(() => expect(mockGetNotifications).toHaveBeenCalledTimes(2));
+  });
+
+  it('is a no-op again after the hook unmounts', async () => {
+    const { unmount } = renderHook(() => useNotifications(0));
+    await waitFor(() => expect(mockGetNotifications).toHaveBeenCalledTimes(1));
+
+    unmount();
+    vi.clearAllMocks();
+
+    act(() => {
+      refreshInternal();
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(mockGetNotifications).not.toHaveBeenCalled();
   });
 });
