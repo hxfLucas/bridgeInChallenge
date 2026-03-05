@@ -35,10 +35,22 @@ export async function createTestDataSource(): Promise<DataSource> {
     implementation: () => 'public',
   });
 
-  // TypeORM uses uuid_generate_v4() as the DEFAULT for UUID columns.
+  // TypeORM uses uuid_generate_v4() as the DEFAULT for UUID columns in older
+  // versions, and gen_random_uuid() in newer versions (≥0.3.20).
+  // pg-mem's built-in gen_random_uuid() is deterministic/sequential and can
+  // produce duplicate UUIDs that collide with explicitly-seeded test data, so
+  // we override both functions with a truly-random implementation.
   db.public.registerFunction({
     name: 'uuid_generate_v4',
     returns: DataType.uuid,
+    impure: true,
+    implementation: () => uuidv4(),
+  });
+
+  db.public.registerFunction({
+    name: 'gen_random_uuid',
+    returns: DataType.uuid,
+    impure: true,
     implementation: () => uuidv4(),
   });
 
