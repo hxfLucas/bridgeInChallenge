@@ -43,6 +43,8 @@ It references both **"a unique" link** (singular) and **"magic links"** (plural)
 
 ## High-Level System Diagram
 
+(Must be viewed from the desktop as mermaid  diagrams do not load on github if you are reading this from a mobile device)
+
 ```mermaid
 graph TB
     subgraph "Frontend (React + Vite)"
