@@ -322,6 +322,14 @@ When a user triggers "Sign Out All Devices", the current timestamp is recorded. 
 
 **Memory footprint:** The in-memory map stores `UUIDv4 (16 bytes) → timestamp (8 bytes) = 24 bytes` per entry. For **1 million users**, this consumes approximately **~24 MB** of memory — a negligible cost for eliminating Redis round-trips on every authenticated request. (Only relevant if the Redis node is placed in another machine / datacenter)
 
+NOTE: This is ONLY acceptable assuming we are using a single server node, if we were thinking about scaling it would actually be better to use redis for it.
+
+The same applies to rate limiting
+
+The in-memory implementation serves as an example to show both scenarios. 
+
+(I would personally prefer to just use redis for everything in-memory related unless it is something very specific related to the node itself)
+
 ---
 
 ## Testing
