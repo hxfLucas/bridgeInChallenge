@@ -89,7 +89,7 @@ function setAccessTokenCookie(res: Response, accessToken: string): void {
   });
 }
 
-export async function signUp(req: Request<{}, AuthTokenResponseDto, SignUpDto>, res: Response<AuthTokenResponseDto | ErrorResponseDto>): Promise<void> {
+export async function signUp(req: Request<{}, {}, SignUpDto>, res: Response<AuthTokenResponseDto | ErrorResponseDto>): Promise<void> {
   const { email: rawEmail, password, company } = req.body ?? {};
   const email = String(rawEmail ?? '').trim().toLowerCase();
   if (!email || !password) {

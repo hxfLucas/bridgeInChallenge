@@ -8,10 +8,10 @@ import { AddUserDto, UpdateUserPasswordDto } from './users.dtos';
 
 const router = Router();
 
-router.post('/add-user', ensureAdmin, validateBody(AddUserDto), addUser);
+router.post('/add-user', ensureAdmin,addUser);
 router.delete('/remove-user/:id', ensureAdmin, removeUser);
 router.get('/list', ensureManager, usersList);
-router.patch('/update-user', ensureAdmin, validateBody(UpdateUserPasswordDto), updateUserPassword);
+router.patch('/update-user', ensureAdmin, updateUserPassword);
 router.put('/settings', jwtGuard, updateOwnSettingsHandler);
 
 export default router;

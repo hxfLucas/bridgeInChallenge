@@ -1,13 +1,12 @@
 import { Router } from 'express';
-import { checkSession, refreshTokens, signIn, signOut, signUp, getNotifications } from './auth.handler';
 import { jwtGuard } from '../../shared/middleware/jwtGuard';
-import { validateBody } from '../../shared/middleware/validateBody';
-import { SignInDto, SignUpDto, RefreshTokensDto } from './auth.dtos';
+import { withTransaction } from '../../shared/middleware/withTransaction';
+import { checkSession, getNotifications, refreshTokens, signIn, signOut, signUp } from './auth.handler';
 
 const authRouter = Router();
 
 authRouter.post('/sign-in',  signIn);
-authRouter.post('/sign-up', signUp);
+authRouter.post('/sign-up', withTransaction, signUp);
 authRouter.post('/refresh-tokens', refreshTokens);
 authRouter.get('/check-session', jwtGuard, checkSession);
 authRouter.get('/notifications', jwtGuard, getNotifications);
