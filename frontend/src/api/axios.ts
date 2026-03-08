@@ -24,7 +24,7 @@ api.interceptors.response.use(
 
     if (
       error.response?.status === 401 &&
-      error.response?.data?.message === 'invalid_token' &&
+      (error.response?.data?.message === 'invalid_token' || error.response?.data?.message === 'token_invalidated') &&
       !(error as any).config._retry
     ) {
       const refreshToken = getRefreshToken();
@@ -45,6 +45,7 @@ api.interceptors.response.use(
         return api(originalConfig);
       } catch (refreshError) {
         clearRefreshToken();
+        window.dispatchEvent(new CustomEvent('auth:session-expired'));
         return Promise.reject(refreshError);
       }
     }

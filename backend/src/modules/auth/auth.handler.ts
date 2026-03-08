@@ -3,10 +3,12 @@ import crypto from 'crypto';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { hashPassword, verifyPassword } from '../../shared/utils/passwordUtils';
 import { getAppDataSource } from '../../shared/database/data-source';
+import { getTransactionalEntityManager } from '../../shared/database/transactionContext';
 import { getAuthenticatedUserData } from '../../shared/auth/authContext';
 import { User } from '../users/users.entity';
 import { Company } from '../companies/companies.entity';
 import { getNewReportCount } from '../notifications/notifications.service';
+import { isTokenInvalidated } from '../../shared/auth/tokenInvalidation';
 import { SignUpDto, SignInDto, RefreshTokensDto, AuthTokenResponseDto, CheckSessionResponseDto } from './auth.dtos';
 import { NotificationsResponseDto } from '../notifications/notifications.dtos';
 import { ErrorResponseDto } from '../../shared/errors/errorResponse.dto';
@@ -89,23 +91,23 @@ function setAccessTokenCookie(res: Response, accessToken: string): void {
   });
 }
 
-export async function signUp(req: Request<{}, AuthTokenResponseDto, SignUpDto>, res: Response<AuthTokenResponseDto | ErrorResponseDto>): Promise<void> {
+export async function signUp(req: Request<{}, {}, SignUpDto>, res: Response<AuthTokenResponseDto | ErrorResponseDto>): Promise<void> {
   const { email: rawEmail, password, company } = req.body ?? {};
   const email = String(rawEmail ?? '').trim().toLowerCase();
   if (!email || !password) {
     throw createHttpError(400, 'email and password are required', 'BAD_REQUEST');
   }
 
-  const repository = getAppDataSource().getRepository(User);
+  const em = getTransactionalEntityManager();
+  const repository = em.getRepository(User);
   const existingUser = await repository.findOneBy({ email });
   if (existingUser) {
     throw createHttpError(409, 'email already registered', 'DUPLICATE_EMAIL');
   }
 
-  const repositoryCompany = getAppDataSource().getRepository(Company);
+  const repositoryCompany = em.getRepository(Company);
   const newCompany = repositoryCompany.create({ name: company });
   const savedCompany = await repositoryCompany.save(newCompany);
-
   const companyId = savedCompany.id;
   const passwordHash = await hashPassword(password);
   const roleToAssign = "admin";
@@ -117,7 +119,7 @@ export async function signUp(req: Request<{}, AuthTokenResponseDto, SignUpDto>, 
   res.status(201).json({ refresh_token });
 }
 
-export async function signIn(req: Request<{}, AuthTokenResponseDto, SignInDto>, res: Response<AuthTokenResponseDto | ErrorResponseDto>): Promise<void> {
+export async function signIn(req: Request<{}, {}, SignInDto>, res: Response<AuthTokenResponseDto | ErrorResponseDto>): Promise<void> {
   const { email: rawEmail, password } = req.body ?? {};
   const email = String(rawEmail ?? '').trim().toLowerCase();
   if (!email || !password) {
@@ -161,6 +163,10 @@ export async function refreshTokens(req: Request<{}, AuthTokenResponseDto, Refre
   const accessTokenHash = md5Hash(accessToken);
   if (accessTokenHash !== payload.atHash) {
     throw createHttpError(401, 'token pair mismatch', 'UNAUTHORIZED');
+  }
+
+  if (isTokenInvalidated(payload.sub, payload.iat ?? 0)) {
+    throw createHttpError(401, 'token has been invalidated', 'UNAUTHORIZED');
   }
 
   const userRepository = getAppDataSource().getRepository(User);

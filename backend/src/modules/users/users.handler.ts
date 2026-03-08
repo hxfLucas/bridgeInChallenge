@@ -5,7 +5,7 @@ import { ErrorResponseDto } from '../../shared/errors/errorResponse.dto';
 import { createUserForCompany, deleteUserFromCompany, updateUserPassword as updateUserPasswordService, listUsers, updateOwnSettings } from './users.service';
 import { getAuthenticatedUserData } from '../../shared/auth/authContext';
 
-export async function addUser(req: Request<{}, UserResponseDto, AddUserDto>, res: Response<UserResponseDto | ErrorResponseDto>) {
+export async function addUser(req: Request<{}, {}, AddUserDto>, res: Response<UserResponseDto | ErrorResponseDto>) {
 
   const { email: rawEmail, password: rawPassword } = req.body ?? {};
   const email = String(rawEmail ?? '').trim().toLowerCase();

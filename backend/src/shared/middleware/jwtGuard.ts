@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import { runWithAuthUser } from '../../shared/auth/authContext';
-import { isTokenInvalidated } from '../../shared/auth/tokenInvalidation';
+import { runWithAuthUser } from '../auth/authContext';
+import { isTokenInvalidated } from '../auth/tokenInvalidation';
 
 type AccessTokenPayload = JwtPayload & {
   sub: string;

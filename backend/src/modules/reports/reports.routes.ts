@@ -12,11 +12,11 @@ const submitReportLimiter = createRateLimiter({ windowMs: 60000, max: 1 });
 
 // Public routes (no authentication)
 router.get('/validate-report', validateReportHandler);
-router.post('/submit-report', submitReportLimiter, validateBody(SubmitReportDto), submitReportHandler);
+router.post('/submit-report', submitReportLimiter, submitReportHandler);
 
 // Manager-accessible routes
 router.get('/list', ensureManager, listReportsHandler);
-router.patch('/update-report-status', ensureManager, validateBody(UpdateReportStatusDto), updateReportStatusHandler);
+router.patch('/update-report-status', ensureManager, updateReportStatusHandler);
 
 // Admin-only routes
 router.delete('/delete-report/:id', ensureAdmin, deleteReportHandler);

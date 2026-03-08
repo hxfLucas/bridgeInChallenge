@@ -2,7 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
-import { jwtGuard } from '../jwtGuard';
+import { jwtGuard } from '../../../shared/middleware/jwtGuard';
 import { invalidationMap } from '../../../shared/auth/tokenInvalidation';
 import { TEST_JWT_SECRET, makeTestToken } from '../../../shared/test-helpers/guardTestUtils';
 

@@ -19,10 +19,6 @@ export async function listMagicLinks(req: Request, res: Response<ListMagicLinksR
 
 export async function createNewMagicLink(req: Request<{}, MagicLinkResponseDto, CreateMagicLinkDto>, res: Response<MagicLinkResponseDto | ErrorResponseDto>): Promise<void> {
   const { companyId, id: createdById } = getAuthenticatedUserData();
-  if (!companyId) {
-    res.status(400).json({ error: 'companyId is required' })
-    return
-  }
   const { alias } = req.body
   const created = await createMagicLink(companyId, alias, createdById);
   res.status(201).json({

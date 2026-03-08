@@ -1,5 +1,5 @@
 import { RequestHandler, Request, Response, NextFunction } from 'express';
-import { jwtGuard } from '../../modules/auth/jwtGuard';
+import { jwtGuard } from './jwtGuard';
 
 // Ensure the request is authenticated (via jwtGuard) and the user is an admin.
 export const ensureAdmin: RequestHandler = (req, res, next) => {
