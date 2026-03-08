@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { jwtGuard } from '../auth/jwtGuard';
+import { jwtGuard } from '../../shared/middleware/jwtGuard';
 import { dashboardFetchHandler } from './dashboard.handler';
 
 const router = Router();

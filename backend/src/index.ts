@@ -2,7 +2,7 @@
 import dotenv from 'dotenv';
 import { createApp } from './createApp';
 import { createNotificationWorker } from './modules/notifications/notifications.worker';
-import { loadInvalidationMapFromRedis } from './shared/auth/tokenInvalidation';
+import { loadInvalidationMapFromRedis, startInvalidationSubscriber } from './shared/auth/tokenInvalidation';
 
 import http from 'http';
 import attachProcessHandlers from './shared/safe-shutdown';
@@ -13,6 +13,7 @@ dotenv.config();
 
     const app = await createApp();
     await loadInvalidationMapFromRedis();
+    startInvalidationSubscriber();
     const worker = createNotificationWorker();
     const PORT = Number(process.env.PORT || 3000);
     const server = http.createServer(app);

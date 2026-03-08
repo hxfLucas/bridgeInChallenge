@@ -25,7 +25,7 @@ import {
 import TableContainerWrapper from '../../../components/TableContainerWrapper';
 import { Add as AddIcon, Close as CloseIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import { useUsers } from '../../../hooks/modules/useUsers';
-import { useSearch } from '../../../hooks/modules/useSearch';
+import { useSearch } from '../../../hooks/useSearch';
 import { formatDate } from '../../../utils/formatDate';
 import { useAuthContext } from '../../../contexts/AuthContext';
 

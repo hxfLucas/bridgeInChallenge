@@ -117,7 +117,7 @@ export async function signUp(req: Request<{}, AuthTokenResponseDto, SignUpDto>, 
   res.status(201).json({ refresh_token });
 }
 
-export async function signIn(req: Request<{}, AuthTokenResponseDto, SignInDto>, res: Response<AuthTokenResponseDto | ErrorResponseDto>): Promise<void> {
+export async function signIn(req: Request<{}, {}, SignInDto>, res: Response<AuthTokenResponseDto | ErrorResponseDto>): Promise<void> {
   const { email: rawEmail, password } = req.body ?? {};
   const email = String(rawEmail ?? '').trim().toLowerCase();
   if (!email || !password) {

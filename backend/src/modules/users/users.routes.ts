@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import ensureAdmin from '../../shared/middleware/ensureAdmin';
 import ensureManager from '../../shared/middleware/ensureManager';
-import { jwtGuard } from '../auth/jwtGuard';
+import { jwtGuard } from '../../shared/middleware/jwtGuard';
 import { addUser, removeUser, usersList, updateUserPassword, updateOwnSettingsHandler } from './users.handler';
 import { validateBody } from '../../shared/middleware/validateBody';
 import { AddUserDto, UpdateUserPasswordDto } from './users.dtos';
