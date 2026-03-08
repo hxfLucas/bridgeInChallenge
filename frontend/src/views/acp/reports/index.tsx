@@ -21,6 +21,7 @@ import {
   Tooltip,
   Typography,
   Divider,
+  TextField,
 } from '@mui/material';
 import TableContainerWrapper from '../../../components/TableContainerWrapper';
 import { Delete as DeleteIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
@@ -127,7 +128,7 @@ export default function ReportsPage() {
                         onChange={(e) =>
                           changeReportStatus(report.id, e.target.value as ReportStatus)
                         }
-                        sx={{ minWidth: 120 }}
+                        sx={{ minWidth: 120, '& .MuiSelect-select': { textAlign: 'center' } }}
                       >
                         {allStatuses.map((s) => (
                           <MenuItem key={s} value={s}>
