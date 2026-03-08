@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { getReports, deleteReport, updateReportStatus } from '../../api/reports.api';
-import { refreshInternal as refreshNotifications } from './useNotifications';
+import { decrementInternal as decrementNotifications, incrementInternal as incrementNotifications } from './useNotifications';
 import { extractErrorMessage } from '../../utils/extractErrorMessage';
 import type { Report, ReportStatus } from '../../api/reports.api';
 
@@ -40,6 +40,8 @@ export function useReports() {
   const [state, setState] = useState<ReportsState>({ reports: [], total: 0, hasMore: false, isLoading: false, isLoadingMore: false, error: null });
   const [removeReportState, setRemoveReportState] = useState<ActionState>(initialActionState);
   const [changeStatusState, setChangeStatusState] = useState<ActionState>(initialActionState);
+  const reportsRef = useRef(state.reports);
+  reportsRef.current = state.reports;
 
   const offsetRef = useRef(0);
   const hasMoreRef = useRef(false);
@@ -84,6 +86,7 @@ export function useReports() {
   }, []);
 
   const removeReport = useCallback(async (id: string) => {
+    const wasNew = reportsRef.current.find((r) => r.id === id)?.status === 'new';
     setRemoveReportState({ isLoading: true, error: null });
     try {
       await deleteReport(id);
@@ -92,11 +95,8 @@ export function useReports() {
         reports: prev.reports.filter((r) => r.id !== id),
       }));
       setRemoveReportState({ isLoading: false, error: null });
-      // trigger notifications refresh so navbar badge updates immediately
-      try {
-        refreshNotifications();
-      } catch (_) {
-        // swallow any refresh errors
+      if (wasNew) {
+        decrementNotifications();
       }
     } catch (err: any) {
       const message = extractErrorMessage(err, 'Failed to delete report');
@@ -105,6 +105,7 @@ export function useReports() {
   }, []);
 
   const changeReportStatus = useCallback(async (id: string, status: ReportStatus) => {
+    const oldStatus = reportsRef.current.find((r) => r.id === id)?.status;
     setChangeStatusState({ isLoading: true, error: null });
     try {
       const updated = await updateReportStatus({ id, status });
@@ -113,11 +114,11 @@ export function useReports() {
         reports: prev.reports.map((r) => (r.id === id ? updated : r)),
       }));
       setChangeStatusState({ isLoading: false, error: null });
-      // refresh notifications so badge updates immediately after status change
-      try {
-        refreshNotifications();
-      } catch (_) {
-        // ignore
+      if (oldStatus === 'new' && status !== 'new') {
+        decrementNotifications();
+      }
+      if(oldStatus !== 'new' && status === 'new'){
+        incrementNotifications();
       }
     } catch (err: any) {
       const message = extractErrorMessage(err, 'Failed to update status');

@@ -6,9 +6,19 @@ import { useVisibilityChange } from '../useVisibilityChange';
 // `refreshInternal` to trigger a refetch without calling the hook's
 // instance method directly from UI components like headers.
 let _internalRefresh: (() => void) | null = null;
+let _internalDecrement: (() => void) | null = null;
+let _internalIncrement:(() => void) | null = null;
 
 export function refreshInternal() {
   if (_internalRefresh) _internalRefresh();
+}
+
+export function decrementInternal() {
+  if (_internalDecrement) _internalDecrement();
+}
+
+export function incrementInternal(){
+  if(_internalIncrement) _internalIncrement();
 }
 
 export function useNotifications(pollInterval = 15000) {
@@ -30,12 +40,22 @@ export function useNotifications(pollInterval = 15000) {
     fetch();
   }, [fetch]);
 
+  const decrement = useCallback(() => {
+    setUnread((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const increment = useCallback(() => {
+    setUnread((prev) => prev + 1);
+  }, []);
+
   useVisibilityChange(fetch);
 
   useEffect(() => {
     mountedRef.current = true;
     // register this hook instance as the module-level internal refresher
     _internalRefresh = refresh;
+    _internalDecrement = decrement;
+    _internalIncrement = increment;
     // initial fetch
     fetch();
 
@@ -49,9 +69,11 @@ export function useNotifications(pollInterval = 15000) {
       mountedRef.current = false;
       // only clear if it still points to this instance's refresh
       if (_internalRefresh === refresh) _internalRefresh = null;
+      if (_internalDecrement === decrement) _internalDecrement = null;
+      if (_internalIncrement === increment) _internalIncrement = null;
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [fetch, pollInterval]);
 
-  return { unread, refresh } as const;
+  return { unread, refresh, decrement, increment } as const;
 }
