@@ -22,6 +22,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Assessment as AssessmentIcon, People as PeopleIcon, VpnKey as VpnKeyIcon, Summarize as SummarizeIcon, Dashboard as DashboardIcon } from '@mui/icons-material';
+import ThemeToggle from '../../components/ThemeToggle';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { useAuth } from '../../hooks/modules/useAuth';
@@ -98,6 +99,7 @@ export default function ACPLayout() {
             <Typography variant="subtitle1" fontWeight={600} flexGrow={1}>
               EthicReport ACP
             </Typography>
+            <ThemeToggle />
             <Badge
               badgeContent={unread}
               invisible={unread === 0}

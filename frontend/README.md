@@ -71,3 +71,12 @@ export default defineConfig([
   },
 ])
 ```
+
+## Application-specific notes
+
+- A `ThemeContext` lives under `src/contexts/ThemeContext.tsx`. It exposes `mode` and
+  `toggleMode`, persists the value in `localStorage` and wraps the entire app via
+  `main.tsx`.
+- The `ThemeToggle` component (`src/components/ThemeToggle.tsx`) renders a
+  sun/moon button in the navbar and uses the context to switch modes.
+
